@@ -11,3 +11,16 @@ different coding language like C++.
 JUMPSCARES! YOU HAVE BEEN WARNED! :exclamation:
 
 Anyways, with that out of the way...
+
+## Requirements
+- Maven is required to run this, as it's needed to run JavaFX for the game to be
+functional.
+- You will also need to have a terminal of sorts. The only OS I've tested this
+with is Linux, so I don't know if this would even work on Windows or Mac.
+  - Run `mvn clean javafx:run` in the terminal while in the project file. This
+  is how you run the program.
+- Oh yeah, don't forget, you need a computer! Doubt that's going to be an issue,
+seeing as you're reading this right now.
+- I would also recommend a keyboard. No, seriously, it makes *all* the
+difference when you wanna play a game. How would you even make it here without
+one?
