@@ -22,12 +22,18 @@ public class OSCN extends Application{
   public static final double DEFAULT_WIDTH = 1.0;
 
   // initializes the threats at the start for easier processing later.
-  Brown brown = new Brown(4, 0);
-  Blue blue = new Blue(6, 2);
-  Yellow yellow = new Yellow(1, 5);
-  Red red = new Red(8, 2);
+  Brown brown = new Brown(0, 0);
+  Blue blue = new Blue(0, 0);
+  Yellow yellow = new Yellow(0, 0);
+  Red red = new Red(0, 0);
 
   Threat[] threats = {brown, blue, yellow, red};
+
+  // Text that shows the AI values of the threats. (Part 1)
+  Text aiValue = text(getAIValues(), 1300, 250, menu); // I had to move this out here for some reason or it wouldn't work.
+
+  // Important variable for selecting threats and altering them later
+  static int selectedIndex = -1;
 
   public void start(Stage stage){
       // Creates the custom colors used for the threats.
@@ -42,31 +48,68 @@ public class OSCN extends Application{
       Rectangle yellowIcon = drawRect(350, 50, 100, 100, customYellow, menu);
       Rectangle redIcon = drawRect(500, 50, 100, 100, customRed, menu);
 
-      // Important variable for selecting threats and altering them later
-      int selectedIndex = -1;
-
       // The text that is to show for character descriptions.
-      Text desc = text("Hover over the icons above for character mechanics!", 50, 200, menu);
+      Text desc = text("Hover over the icons above for character mechanics!", 50, 300, menu);
       desc.setFont(Font.font("Courier New", FontWeight.NORMAL, 20));
 
+      // Text that shows the AI values of the threats. (Part 2)
+      aiValue.setFont(Font.font("Courier New", FontWeight.NORMAL, 20));
+
+      // Buttons that adjust the AI values of different threats.
+      Button increm = drawButton("+", 1300, 100, 125, 50, 30, menu);
+      Button decrem = drawButton("-", 1425, 100, 125, 50, 30, menu);
+      Button setAllMin = drawButton("Set All 0", 1300, 50, 250, 50, 30, menu);
+      Button setAllMax = drawButton("Set All 20", 1300, 150, 250, 50, 30, menu);
+
+      // Loads the screen
       stage.setTitle("Oversimplified Custom Night");
       Scene scene = new Scene(menu, 1600, 900);
       scene.setFill(Color.ALICEBLUE);
       stage.setScene(scene);
       stage.show();
 
+      // Grabs the descriptions for the threats to describe how to deal with threats, also sets the selection index.
       brownIcon.setOnMouseEntered(e -> {
-        desc.setText(brown.getDescription() + "\n\nCurrent AI Level: " + brown.getDifficulty());
-
+        desc.setText(brown.getDescription() + "\n\nDX Mechanic: " + brown.getDX_Description());
+        setIndex(brown.getIndex());
       });
       blueIcon.setOnMouseEntered(e -> {
-        desc.setText(blue.getDescription() + "\n\nCurrent AI Level: " + blue.getDifficulty());
+        desc.setText(blue.getDescription() + "\n\nDX Mechanic: " + blue.getDX_Description());
+        setIndex(blue.getIndex());
       });
       yellowIcon.setOnMouseEntered(e -> {
-        desc.setText(yellow.getDescription() + "\n\nCurrent AI Level: " + yellow.getDifficulty());
+        desc.setText(yellow.getDescription() + "\n\nDX Mechanic: " + yellow.getDX_Description());
+        setIndex(yellow.getIndex());
       });
       redIcon.setOnMouseEntered(e -> {
-        desc.setText(red.getDescription() + "\n\nCurrent AI Level: " + red.getDifficulty());
+        desc.setText(red.getDescription() + "\n\nDX Mechanic: " + red.getDX_Description());
+        setIndex(red.getIndex());
+      });
+
+      // Code for the buttons to alter the AI values of the threats from the main menu
+      increm.setOnMouseClicked(e -> {
+        if (selectedIndex != -1) {
+          threats[selectedIndex].incrementDifficulty();
+          updateAIValues();
+        }
+      });
+      decrem.setOnMouseClicked(e -> {
+        if (selectedIndex != -1) {
+          threats[selectedIndex].decrementDifficulty();
+          updateAIValues();
+        }
+      });
+      setAllMin.setOnMouseClicked(e -> {
+        for (Threat t : threats) {
+          t.setDifficulty(0);
+        }
+        updateAIValues();
+      });
+      setAllMax.setOnMouseClicked(e -> {
+        for (Threat t : threats) {
+          t.setDifficulty(20);
+        }
+        updateAIValues();
       });
   }
 
@@ -102,6 +145,36 @@ public class OSCN extends Application{
         group.getChildren().add(text);
         return text;
   }
+
+  public static Button drawButton(String str, int x, int y, int w, int h, int t, Group group) {
+      // parameters: Button text, x position, y position, width, height, font size, group to include in.
+      if (w < 0 || h < 0 || t < 0) {
+        throw new IllegalArgumentException("Dimensions and font size cannot be negative!");
+      }
+
+      Button button = new Button(str);
+      button.setPrefWidth(w);
+      button.setPrefHeight(h);
+      button.relocate(x, y);
+      group.getChildren().add(button);
+      button.setFont(Font.font(t));
+      return button;
+  }
+
+  public void setIndex(int index) {
+      selectedIndex = index;
+  }
+
+  private String getAIValues() { // Goes through every threat and retrieves their name and AI level to print as text.
+    String output = "Difficulty Values";
+    for (Threat t : threats) {
+      output = output + "\n" + t.getName() + ": " + t.getDifficulty();
+    }
+    return output;
+  }
+  private void updateAIValues() { // I literally only made this so I wouldn't have to type a long line 20 times.
+    aiValue.setText(getAIValues());
+  }
 }
 
 /**
@@ -122,91 +195,111 @@ class Threat{
   protected int difficulty;
   protected int location;
   protected int[][] path = new int[0][0];
-  protected String description;
+  protected final String NAME;
+  protected final String DESCRIPTION;
+  protected final String DX_DESCRIPTION;
+  protected boolean dxMode = false;
 
-  public Threat(int d, int l, int i) {
+  public Threat(int d, int l, int i, String name, String desc, String dxDesc) {
       if (d < 0) {
         d = 0; // Sets the difficulty variable to 0 if the input is lower.
       } else if (d > 20) {
         d = 20; // Sets the difficulty variable to 20 if the input is higher.
       }
-      if (i < 0) {
+      if (i < 0) { // Checks for a valid index position. This is used to refer to the Threat array later.
         throw new IllegalArgumentException("Index cannot be negative!");
       }
       difficulty = d;
       location = l;
+      NAME = name;
       THREAT_INDEX = i;
+      DESCRIPTION = desc;
+      DX_DESCRIPTION = dxDesc;
   }
   public Threat() {
-      this (0, 0, 0);
+      this (0, 0, 0, "unnamed", "Placeholder", "DX Placeholder");
   }
 
+  // Accessor methods
   public int getDifficulty() { // Returns the AI levels of the threat
     return difficulty;
   }
+  public String getName() { // Returns the description text.
+    return NAME;
+  }
   public String getDescription() { // Returns the description text.
-    return description;
+    return DESCRIPTION;
+  }
+  public String getDX_Description() { // Returns the DX description text.
+    return DX_DESCRIPTION;
+  }
+  public int getIndex() {
+    return THREAT_INDEX;
+  }
+
+  // Mutator methods
+  public void setDifficulty(int diff) { // Sets the AI value to a random value
+    if (diff < 0) {
+      diff = 0; // Sets the difficulty variable to 0 if the input is lower.
+    } else if (diff > 20) {
+      diff = 20; // Sets the difficulty variable to 20 if the input is higher.
+    }
+
+    difficulty = diff;
+  }
+  public void incrementDifficulty() { // Increases the AI value by 1
+    if (difficulty < 20) {
+      difficulty++;
+    }
+  }
+  public void decrementDifficulty() { // Lowers the AI value by 1
+    if (difficulty > 0) {
+      difficulty--;
+    }
+  }
+  public void setPath(int[][] path) {
+    this.path = path;
   }
 }
 
 class Brown extends Threat{ // Code for Brown/Freddy
 
   public Brown(int d, int l) {
-      super(d, l, 0);
-      description = "Placeholder for Brown";
+      super(d, l, 0, "Brown", "Placeholder for Brown", "DX Placeholder for Brown");
   }
   public Brown() {
       this(0, 0);
-  }
-
-  public String getDescription() { // Returns the description text.
-    return description;
   }
 }
 
 class Blue extends Threat{ // Code for Blue/Bonnie
 
   public Blue(int d, int l) {
-      super(d, l, 1);
-      description = "Placeholder for Blue";
+      super(d, l, 1, "Blue", "Placeholder for Blue", "DX Placeholder for Blue");
   }
   public Blue() {
       this(0, 0);
-  }
-
-  public String getDescription() { // Returns the description text.
-    return description;
   }
 }
 
 class Yellow extends Threat{ // Code for Yellow/Chica
 
   public Yellow(int d, int l) {
-      super(d, l, 2);
-      description = "Placeholder for Yellow";
+      super(d, l, 2, "Yellow", "Placeholder for Yellow", "DX Placeholder for Yellow");
 
   }
   public Yellow() {
       this(0, 0);
-  }
-
-  public String getDescription() { // Returns the description text.
-    return description;
   }
 }
 
 class Red extends Threat{ // Code for Red/Foxy
 
   public Red(int d, int l) {
-      super(d, l, 3);
-      description = "Placeholder for Red";
+      super(d, l, 3, "Red", "Placeholder for Red", "DX Placeholder for Red");
   }
   public Red() {
       this(0, 0);
-  }
-
-  public String getDescription() { // Returns the description text.
-    return description;
   }
 }
 
