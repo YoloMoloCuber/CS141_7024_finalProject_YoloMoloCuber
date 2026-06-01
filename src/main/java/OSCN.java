@@ -1,6 +1,8 @@
 /**
  * TO DO:
- * - literally everything
+ * - Make an office
+ * - Successfully load an image
+ * - make the actual playable game???
  *
  * @author YoloMoloCuber
  */
@@ -15,6 +17,8 @@ import javafx.scene.layout.*;
 import javafx.scene.control.*;
 import javafx.stage.*;
 import java.util.*;
+import java.lang.*;
+import java.io.*;
 
 public class OSCN extends Application{
   public static Group menu = new Group();
@@ -30,12 +34,12 @@ public class OSCN extends Application{
   Threat[] threats = {brown, blue, yellow, red};
 
   // Text that shows the AI values of the threats. (Part 1)
-  Text aiValue = text(getAIValues(), 1300, 250, menu); // I had to move this out here for some reason or it wouldn't work.
+  Text aiValue = text(getAIValues(), 1300, 325, menu); // I had to move this out here for some reason or it wouldn't work.
 
   // Important variable for selecting threats and altering them later
   static int selectedIndex = -1;
 
-  public void start(Stage stage){
+  public void start(Stage stage) throws FileNotFoundException {
       // Creates the custom colors used for the threats.
       Color customBrown = Color.web("6e4d10");
       Color customBlue = Color.web("3335ab");
@@ -47,6 +51,9 @@ public class OSCN extends Application{
       Rectangle blueIcon = drawRect(200, 50, 100, 100, customBlue, menu);
       Rectangle yellowIcon = drawRect(350, 50, 100, 100, customYellow, menu);
       Rectangle redIcon = drawRect(500, 50, 100, 100, customRed, menu);
+
+      // Loads the map to be used later
+      ImageView map = drawImage("../../../assets/officeMap.png", 500, 500, 320, 530, menu);
 
       // The text that is to show for character descriptions.
       Text desc = text("Hover over the icons above for character mechanics!", 50, 300, menu);
@@ -60,6 +67,8 @@ public class OSCN extends Application{
       Button decrem = drawButton("-", 1425, 100, 125, 50, 30, menu);
       Button setAllMin = drawButton("Set All 0", 1300, 50, 250, 50, 30, menu);
       Button setAllMax = drawButton("Set All 20", 1300, 150, 250, 50, 30, menu);
+      Button dxMode = drawButton("Toggle DX", 1300, 200, 250, 50, 30, menu);
+      Button dxModeAll = drawButton("Toggle All DX", 1300, 250, 250, 50, 30, menu);
 
       // Loads the screen
       stage.setTitle("Oversimplified Custom Night");
@@ -108,6 +117,18 @@ public class OSCN extends Application{
       setAllMax.setOnMouseClicked(e -> {
         for (Threat t : threats) {
           t.setDifficulty(20);
+        }
+        updateAIValues();
+      });
+      dxMode.setOnMouseClicked(e -> {
+        if (selectedIndex != -1) {
+          threats[selectedIndex].toggleDX();
+          updateAIValues();
+        }
+      });
+      dxModeAll.setOnMouseClicked(e -> {
+        for (Threat t : threats) {
+          t.toggleDX();
         }
         updateAIValues();
       });
@@ -165,10 +186,26 @@ public class OSCN extends Application{
       selectedIndex = index;
   }
 
+  public ImageView drawImage(String imgDir, int x, int y, int w, int h, Group group) throws FileNotFoundException {
+    Image myImage = new Image(new FileInputStream(imgDir)); // This is what loads our image into the program
+    ImageView imageOut = new ImageView(myImage);
+    imageOut.setX(x); // We then set it's initial position, size, ratio preservation, and if it's traversable, and alt text.
+    imageOut.setY(y);
+    imageOut.setFitWidth(w);
+    imageOut.setFitHeight(h);
+    imageOut.setPreserveRatio(true);
+    imageOut.setFocusTraversable(true);
+    group.getChildren().add(imageOut);
+    return imageOut;
+  }
+
   private String getAIValues() { // Goes through every threat and retrieves their name and AI level to print as text.
     String output = "Difficulty Values";
     for (Threat t : threats) {
       output = output + "\n" + t.getName() + ": " + t.getDifficulty();
+      if (t.dxIsActive()) {
+        output = output + " (DX on)";
+      }
     }
     return output;
   }
@@ -191,15 +228,17 @@ public class OSCN extends Application{
  * menu.
  */
 class Threat{
-  public final int THREAT_INDEX;
-  protected int difficulty;
-  protected int location;
-  protected int[][] path = new int[0][0];
-  protected final String NAME;
-  protected final String DESCRIPTION;
-  protected final String DX_DESCRIPTION;
-  protected boolean dxMode = false;
+  public final int THREAT_INDEX; // Index of the threat in the threat array.
+  protected int difficulty; // AI level, how often the threat should move
+  protected int failCount = 0; // counts the number of failed movements
+  protected int location; // Current location on the map.
+  protected int[][] path = new int[0][0]; // The pathing they should have. "Rows" correspond to the room that they're in, "columns" correspond to the rooms that they can move to.
+  protected final String NAME; // Self explanatory
+  protected final String DESCRIPTION; // DESCRIPTION that shows in the main menu.
+  protected final String DX_DESCRIPTION; // Description of the DX mechanic that they have.
+  protected boolean dxMode = false; // Just indicates if dxMode is on or off
 
+  // Constructors
   public Threat(int d, int l, int i, String name, String desc, String dxDesc) {
       if (d < 0) {
         d = 0; // Sets the difficulty variable to 0 if the input is lower.
@@ -236,20 +275,31 @@ class Threat{
   public int getIndex() {
     return THREAT_INDEX;
   }
+  public boolean dxIsActive() {
+    return dxMode;
+  }
 
   // Mutator methods
   public void setDifficulty(int diff) { // Sets the AI value to a random value
+    setDifficulty(diff, false);
+  }
+  public void setDifficulty(int diff, boolean uncap) { // Sets the AI value to a random value. uncap tells the program to ignore the upper limit of 20.
     if (diff < 0) {
       diff = 0; // Sets the difficulty variable to 0 if the input is lower.
-    } else if (diff > 20) {
-      diff = 20; // Sets the difficulty variable to 20 if the input is higher.
+    } else if (diff > 20 && !uncap) {
+      diff = 20; // Sets the difficulty variable to 20 if the input is higher and uncap is false
     }
 
     difficulty = diff;
   }
   public void incrementDifficulty() { // Increases the AI value by 1
-    if (difficulty < 20) {
+    incrementDifficulty(false);
+  }
+  public void incrementDifficulty(boolean uncap) { // Increases the AI value by 1. uncap tells the program to ignore the upper limit of 20.
+    if (difficulty < 20 || uncap) {
       difficulty++;
+    } else {
+      difficulty = 20;
     }
   }
   public void decrementDifficulty() { // Lowers the AI value by 1
@@ -259,6 +309,17 @@ class Threat{
   }
   public void setPath(int[][] path) {
     this.path = path;
+  }
+  public void toggleDX() {
+    dxMode = !dxMode;
+  }
+
+  // Functional methods
+  public boolean movementCheck(int maxNum) {
+    return (int)(Math.floor(Math.random() * (maxNum + 1))) <= difficulty;
+  }
+  public boolean movementCheck() { // default of 20
+    return movementCheck(20);
   }
 }
 
