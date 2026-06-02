@@ -56,7 +56,28 @@ public class OSCN extends Application{
   // The time to show
   static Text remainingPower = text("POWER", 20, 880, cameras);
 
-  public void start(Stage stage) throws FileNotFoundException {
+  // Stage and menuScene on the outside so that I can access it in outside methods
+  private static Stage stage;
+  private static Scene menuScene;
+
+  // Creates the threads beforehand
+  static NightTimer hour = new NightTimer(10000);
+  static PowerDrain generator = new PowerDrain();
+
+  Thread[] threadsList = new Thread[threats.length + 2];
+
+  public void start(Stage primaryStage) throws FileNotFoundException {
+      // sets the stage to primaryStage.
+      this.stage = primaryStage;
+      stage.addEventFilter(NightEvent.NIGHT_END, this::returnToMenu);
+
+      // adds the threads to the list of threads for later control.
+      for (int i = 0; i < threats.length; i++) {
+        threadsList[i] = threats[i];
+      }
+      threadsList[threadsList.length - 2] = hour;
+      threadsList[threadsList.length - 1] = generator;
+
       // Creates the custom colors used for the threats.
       Color customBrown = Color.web("6e4d10");
       Color customBlue = Color.web("3335ab");
@@ -104,7 +125,7 @@ public class OSCN extends Application{
 
       // Loads the screen
       stage.setTitle("Oversimplified Custom Night");
-      Scene menuScene = new Scene(menu, 1600, 900);
+      menuScene = new Scene(menu, 1600, 900);
       Scene officeScene = new Scene(office, 1600, 900);
       Scene cameraScene = new Scene(cameras, 1600, 900);
       menuScene.setFill(Color.ALICEBLUE);
@@ -205,11 +226,11 @@ public class OSCN extends Application{
         updateTime();
         updatePower();
 
-        NightTimer hour = new NightTimer();
-        PowerDrain generator = new PowerDrain();
+        // starts the Threads
         hour.start();
         generator.start();
         for (Threat t : threats) {
+          t.reset();
           t.start();
         }
       });
@@ -363,6 +384,18 @@ public class OSCN extends Application{
   }
   public static boolean isNightActive() {
     return activeNight;
+  }
+
+  // methods to handle events
+  private void returnToMenu(NightEvent event) {
+    for (Thread t : threadsList) {
+      t.interrupt();
+    }
+    stage.setScene(menuScene);
+    stage.show();
+  }
+  public static Stage getStage() {
+    return stage;
   }
 }
 // to build, you'll run
