@@ -4,6 +4,8 @@
  * - Successfully load an image
  * - make the actual playable game???
  *
+ * this code is a damn mess...
+ *
  * @author YoloMoloCuber
  */
 
@@ -186,10 +188,11 @@ public class OSCN extends Application{
       // Code for leaving the main menu
       startNight.setOnMouseClicked(e -> {
         stage.setScene(officeScene);
-
+        setTime(0);
         updateTime();
+
         NightTimer hour = new NightTimer(1000);
-        new Thread(hour).start();
+        hour.start();
       });
   }
 
@@ -263,11 +266,11 @@ public class OSCN extends Application{
     if (selectedIndex == -1) {
       output = output + "None";
     } else {
-      output = output + threats[selectedIndex].getName();
+      output = output + threats[selectedIndex].getThreatName();
     }
     output = output + "\n\nDifficulty Values";
     for (Threat t : threats) {
-      output = output + "\n" + t.getName() + ": " + t.getDifficulty();
+      output = output + "\n" + t.getThreatName() + ": " + t.getDifficulty();
       if (t.dxIsActive()) {
         output = output + " (DX on)";
       }
@@ -304,198 +307,5 @@ public class OSCN extends Application{
     nightHour = time;
   }
 }
-
-/**
- * Generic information for all the Threats:
- *
- * difficulty refers to their AI levels, used in determining when they will move
- * every movement opportinity.
- *
- * location is their current location on the map.
- *
- * path is the movement paths they will take, if at all.
- *
- * description is the description for their behavior that will show in the main
- * menu.
- */
-class Threat{
-  public final int THREAT_INDEX; // Index of the threat in the threat array.
-  protected int difficulty; // AI level, how often the threat should move
-  protected int failCount = 0; // counts the number of failed movements
-  protected int location; // Current location on the map.
-  protected int[][] path = new int[0][0]; // The pathing they should have. "Rows" correspond to the room that they're in, "columns" correspond to the rooms that they can move to.
-  protected final String NAME; // Self explanatory
-  protected final String DESCRIPTION; // DESCRIPTION that shows in the main menu.
-  protected final String DX_DESCRIPTION; // Description of the DX mechanic that they have.
-  protected boolean dxMode = false; // Just indicates if dxMode is on or off
-
-  // Constructors
-  public Threat(int d, int l, int i, String name, String desc, String dxDesc) {
-      if (d < 0) {
-        d = 0; // Sets the difficulty variable to 0 if the input is lower.
-      } else if (d > 20) {
-        d = 20; // Sets the difficulty variable to 20 if the input is higher.
-      }
-      if (i < 0) { // Checks for a valid index position. This is used to refer to the Threat array later.
-        throw new IllegalArgumentException("Index cannot be negative!");
-      }
-      difficulty = d;
-      location = l;
-      NAME = name;
-      THREAT_INDEX = i;
-      DESCRIPTION = desc;
-      DX_DESCRIPTION = dxDesc;
-  }
-  public Threat() {
-      this (0, 0, 0, "unnamed", "Placeholder", "DX Placeholder");
-  }
-
-  // Accessor methods
-  public int getDifficulty() { // Returns the AI levels of the threat
-    return difficulty;
-  }
-  public String getName() { // Returns the description text.
-    return NAME;
-  }
-  public String getDescription() { // Returns the description text.
-    return DESCRIPTION;
-  }
-  public String getDX_Description() { // Returns the DX description text.
-    return DX_DESCRIPTION;
-  }
-  public int getIndex() {
-    return THREAT_INDEX;
-  }
-  public boolean dxIsActive() {
-    return dxMode;
-  }
-
-  // Mutator methods
-  public void setDifficulty(int diff) { // Sets the AI value to a random value
-    setDifficulty(diff, false);
-  }
-  public void setDifficulty(int diff, boolean uncap) { // Sets the AI value to a random value. uncap tells the program to ignore the upper limit of 20.
-    if (diff < 0) {
-      diff = 0; // Sets the difficulty variable to 0 if the input is lower.
-    } else if (diff > 20 && !uncap) {
-      diff = 20; // Sets the difficulty variable to 20 if the input is higher and uncap is false
-    }
-
-    difficulty = diff;
-  }
-  public void incrementDifficulty() { // Increases the AI value by 1
-    incrementDifficulty(false);
-  }
-  public void incrementDifficulty(boolean uncap) { // Increases the AI value by 1. uncap tells the program to ignore the upper limit of 20.
-    if (difficulty < 20 || uncap) {
-      difficulty++;
-    } else {
-      difficulty = 20;
-    }
-  }
-  public void decrementDifficulty() { // Lowers the AI value by 1
-    if (difficulty > 0) {
-      difficulty--;
-    }
-  }
-  public void setPath(int[][] path) {
-    this.path = path;
-  }
-  public void toggleDX() {
-    dxMode = !dxMode;
-  }
-
-  // Functional methods
-  public boolean movementCheck(int maxNum) {
-    return (int)(Math.floor(Math.random() * (maxNum + 1))) <= difficulty;
-  }
-  public boolean movementCheck() { // default of 20
-    return movementCheck(20);
-  }
-}
-
-class Brown extends Threat{ // Code for Brown/Freddy
-
-  public Brown(int d, int l) {
-      super(d, l, 0, "Brown", "Placeholder for Brown", "DX Placeholder for Brown");
-  }
-  public Brown() {
-      this(0, 0);
-  }
-}
-
-class Blue extends Threat{ // Code for Blue/Bonnie
-
-  public Blue(int d, int l) {
-      super(d, l, 1, "Blue", "Placeholder for Blue", "DX Placeholder for Blue");
-  }
-  public Blue() {
-      this(0, 0);
-  }
-}
-
-class Yellow extends Threat{ // Code for Yellow/Chica
-
-  public Yellow(int d, int l) {
-      super(d, l, 2, "Yellow", "Placeholder for Yellow", "DX Placeholder for Yellow");
-
-  }
-  public Yellow() {
-      this(0, 0);
-  }
-}
-
-class Red extends Threat{ // Code for Red/Foxy
-
-  public Red(int d, int l) {
-      super(d, l, 3, "Red", "Placeholder for Red", "DX Placeholder for Red");
-  }
-  public Red() {
-      this(0, 0);
-  }
-}
-
-class Timer implements Runnable{
-  long waitPeriod;
-
-  public Timer() {
-    this(5000);
-  }
-  public Timer(long waitPeriod) {
-    this.waitPeriod = waitPeriod;
-  }
-
-  public void run(){
-    try {
-      wait(waitPeriod);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-    }
-  }
-}
-class NightTimer implements Runnable{
-  long waitPeriod;
-
-  public NightTimer() {
-    this(60000);
-  }
-  public NightTimer(long waitPeriod) {
-    this.waitPeriod = waitPeriod;
-  }
-
-  public void run(){
-    while (OSCN.getTime() < 6) {
-      try {
-        wait(waitPeriod);
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-      }
-      IO.println("1 minute has passed");
-      OSCN.progressTime();
-      OSCN.updateTime();
-    }
-  }
-}
-
 // to build, you'll run
 // mvn clean javafx:run
