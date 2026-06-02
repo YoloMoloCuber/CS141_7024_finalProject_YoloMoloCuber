@@ -191,7 +191,7 @@ public class OSCN extends Application{
         setTime(0);
         updateTime();
 
-        NightTimer hour = new NightTimer(1000);
+        NightTimer hour = new NightTimer();
         hour.start();
       });
   }
