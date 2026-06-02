@@ -1,7 +1,7 @@
 /**
  * TO DO:
  * - Make an office
- * - Successfully load an image
+ * - Make the cameras work and be functional
  * - make the actual playable game???
  *
  * this code is a damn mess...
@@ -19,6 +19,7 @@ import javafx.scene.layout.*;
 import javafx.scene.control.*;
 import javafx.scene.input.*;
 import javafx.stage.*;
+import javafx.event.*;
 import java.util.*;
 import java.lang.*;
 import java.io.*;
@@ -44,11 +45,16 @@ public class OSCN extends Application{
   // Important variable for selecting threats and altering them later
   static int selectedIndex = -1;
 
-  // Keeps track of the time of the night
+  // Keeps track of important night-related information
   private static int nightHour = 0;
+  private static int power = 10000;
+  private static volatile boolean activeNight = false;
 
   // The time to show
-  static Text currentTime = text("TIME", 20, 70, office);
+  static Text currentTime = text("TIME", 20, 70, cameras);
+
+  // The time to show
+  static Text remainingPower = text("POWER", 20, 880, cameras);
 
   public void start(Stage stage) throws FileNotFoundException {
       // Creates the custom colors used for the threats.
@@ -73,6 +79,7 @@ public class OSCN extends Application{
       // Formatting for text that was initialized outside start() that break the code below for some reason.
       aiValue.setFont(Font.font("Courier New", FontWeight.NORMAL, 20));
       currentTime.setFont(Font.font("Courier New", FontWeight.NORMAL, 50));
+      remainingPower.setFont(Font.font("Courier New", FontWeight.NORMAL, 30));
 
       // Buttons that adjust the AI values of different threats.
       Button increm = drawButton("+", 1300, 100, 125, 50, 30, menu);
@@ -85,6 +92,10 @@ public class OSCN extends Application{
       // Button to start the night
       Button startNight = drawButton("Begin Night", 1300, 800, 250, 50, 30, menu);
 
+      // Buttons that toggle the cameras
+      Button cameraUp = drawButton("^ CAMERAS ^", 300, 850, 1000, 50, 30, office);
+      Button cameraDown = drawButton("v CAMERAS v", 300, 850, 1000, 50, 30, cameras);
+
       // Purely just here to test if the transition between the main menu and office works
       if (false) {
         Text officeWorked = text("This should be the office screen!\nIt worked!", 50, 50, office);
@@ -95,6 +106,7 @@ public class OSCN extends Application{
       stage.setTitle("Oversimplified Custom Night");
       Scene menuScene = new Scene(menu, 1600, 900);
       Scene officeScene = new Scene(office, 1600, 900);
+      Scene cameraScene = new Scene(cameras, 1600, 900);
       menuScene.setFill(Color.ALICEBLUE);
       stage.setScene(menuScene);
       stage.show();
@@ -188,11 +200,26 @@ public class OSCN extends Application{
       // Code for leaving the main menu
       startNight.setOnMouseClicked(e -> {
         stage.setScene(officeScene);
+        startNight();
         setTime(0);
         updateTime();
+        updatePower();
 
         NightTimer hour = new NightTimer();
+        PowerDrain generator = new PowerDrain();
         hour.start();
+        generator.start();
+        for (Threat t : threats) {
+          t.start();
+        }
+      });
+
+      // Office controls
+      cameraUp.setOnMouseClicked(e -> {
+        stage.setScene(cameraScene);
+      });
+      cameraDown.setOnMouseClicked(e -> {
+        stage.setScene(officeScene);
       });
   }
 
@@ -305,6 +332,37 @@ public class OSCN extends Application{
   }
   public static void setTime(int time) { // sets the time to a specific hour after 12 AM.
     nightHour = time;
+  }
+
+  // power-related methods
+  public static void updatePower() {
+    remainingPower.setText(printPower() + "%");
+  }
+  private static String printPower() {
+    return ((int) Math.floor((double) power / 100.0)) + "";
+  }
+  public static int getPower() {
+    return power;
+  }
+  public static void changePower() { // decreases power by 0.01%
+    changePower(-1);
+  }
+  public static void changePower(int num) { // changes power by an inputted amount. Positive numbers increase power, negative numbers decrease it.
+    power += num;
+  }
+  public static void setPower(int num) { // sets power to a certain percentage. 100 corresponds to 1% power.
+    power = num;
+  }
+
+  // methods to start and stop the night
+  public static void startNight() { // sets activeNight to true
+    activeNight = true;
+  }
+  public static void stopNight() { // sets activeNight to false
+    activeNight = false;
+  }
+  public static boolean isNightActive() {
+    return activeNight;
   }
 }
 // to build, you'll run
