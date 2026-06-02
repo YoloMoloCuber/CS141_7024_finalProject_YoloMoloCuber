@@ -15,6 +15,7 @@ import javafx.scene.shape.*;
 import javafx.scene.text.*;
 import javafx.scene.layout.*;
 import javafx.scene.control.*;
+import javafx.scene.input.*;
 import javafx.stage.*;
 import java.util.*;
 import java.lang.*;
@@ -22,6 +23,8 @@ import java.io.*;
 
 public class OSCN extends Application{
   public static Group menu = new Group();
+  public static Group office = new Group();
+  public static Group cameras = new Group();
   public static final Color DEFAULT_COLOR = Color.BLACK;
   public static final double DEFAULT_WIDTH = 1.0;
 
@@ -34,10 +37,16 @@ public class OSCN extends Application{
   Threat[] threats = {brown, blue, yellow, red};
 
   // Text that shows the AI values of the threats. (Part 1)
-  Text aiValue = text(getAIValues(), 1300, 325, menu); // I had to move this out here for some reason or it wouldn't work.
+  Text aiValue = text(getAIValues(), 1300, 350, menu); // I had to move this out here for some reason or it wouldn't work.
 
   // Important variable for selecting threats and altering them later
   static int selectedIndex = -1;
+
+  // Keeps track of the time of the night
+  private static int nightHour = 0;
+
+  // The time to show
+  static Text currentTime = text("TIME", 20, 70, office);
 
   public void start(Stage stage) throws FileNotFoundException {
       // Creates the custom colors used for the threats.
@@ -53,14 +62,15 @@ public class OSCN extends Application{
       Rectangle redIcon = drawRect(500, 50, 100, 100, customRed, menu);
 
       // Loads the map to be used later
-      ImageView map = drawImage("../../../assets/officeMap.png", 500, 500, 320, 530, menu);
+      ImageView map = drawImage("src/assets/images/officeMap.png", 500, 500, 320, 530, cameras);
 
       // The text that is to show for character descriptions.
       Text desc = text("Hover over the icons above for character mechanics!", 50, 300, menu);
       desc.setFont(Font.font("Courier New", FontWeight.NORMAL, 20));
 
-      // Text that shows the AI values of the threats. (Part 2)
+      // Formatting for text that was initialized outside start() that break the code below for some reason.
       aiValue.setFont(Font.font("Courier New", FontWeight.NORMAL, 20));
+      currentTime.setFont(Font.font("Courier New", FontWeight.NORMAL, 50));
 
       // Buttons that adjust the AI values of different threats.
       Button increm = drawButton("+", 1300, 100, 125, 50, 30, menu);
@@ -70,29 +80,69 @@ public class OSCN extends Application{
       Button dxMode = drawButton("Toggle DX", 1300, 200, 250, 50, 30, menu);
       Button dxModeAll = drawButton("Toggle All DX", 1300, 250, 250, 50, 30, menu);
 
+      // Button to start the night
+      Button startNight = drawButton("Begin Night", 1300, 800, 250, 50, 30, menu);
+
+      // Purely just here to test if the transition between the main menu and office works
+      if (false) {
+        Text officeWorked = text("This should be the office screen!\nIt worked!", 50, 50, office);
+        officeWorked.setFont(Font.font("Courier New", FontWeight.NORMAL, 100));
+      }
+
       // Loads the screen
       stage.setTitle("Oversimplified Custom Night");
-      Scene scene = new Scene(menu, 1600, 900);
-      scene.setFill(Color.ALICEBLUE);
-      stage.setScene(scene);
+      Scene menuScene = new Scene(menu, 1600, 900);
+      Scene officeScene = new Scene(office, 1600, 900);
+      menuScene.setFill(Color.ALICEBLUE);
+      stage.setScene(menuScene);
       stage.show();
 
       // Grabs the descriptions for the threats to describe how to deal with threats, also sets the selection index.
       brownIcon.setOnMouseEntered(e -> {
         desc.setText(brown.getDescription() + "\n\nDX Mechanic: " + brown.getDX_Description());
-        setIndex(brown.getIndex());
       });
       blueIcon.setOnMouseEntered(e -> {
         desc.setText(blue.getDescription() + "\n\nDX Mechanic: " + blue.getDX_Description());
-        setIndex(blue.getIndex());
       });
       yellowIcon.setOnMouseEntered(e -> {
         desc.setText(yellow.getDescription() + "\n\nDX Mechanic: " + yellow.getDX_Description());
-        setIndex(yellow.getIndex());
       });
       redIcon.setOnMouseEntered(e -> {
         desc.setText(red.getDescription() + "\n\nDX Mechanic: " + red.getDX_Description());
-        setIndex(red.getIndex());
+      });
+
+      // Selects the threat icons that are clicked on, sets selected to none if already selected.
+      brownIcon.setOnMouseClicked(e -> {
+        if (selectedIndex == brown.getIndex()) {
+          setIndex(-1);
+        } else {
+          setIndex(brown.getIndex());
+        }
+        updateAIValues();
+      });
+      blueIcon.setOnMouseClicked(e -> {
+        if (selectedIndex == blue.getIndex()) {
+          setIndex(-1);
+        } else {
+          setIndex(blue.getIndex());
+        }
+        updateAIValues();
+      });
+      yellowIcon.setOnMouseClicked(e -> {
+        if (selectedIndex == yellow.getIndex()) {
+          setIndex(-1);
+        } else {
+          setIndex(yellow.getIndex());
+        }
+        updateAIValues();
+      });
+      redIcon.setOnMouseClicked(e -> {
+        if (selectedIndex == red.getIndex()) {
+          setIndex(-1);
+        } else {
+          setIndex(red.getIndex());
+        }
+        updateAIValues();
       });
 
       // Code for the buttons to alter the AI values of the threats from the main menu
@@ -131,6 +181,15 @@ public class OSCN extends Application{
           t.toggleDX();
         }
         updateAIValues();
+      });
+
+      // Code for leaving the main menu
+      startNight.setOnMouseClicked(e -> {
+        stage.setScene(officeScene);
+
+        updateTime();
+        NightTimer hour = new NightTimer(1000);
+        new Thread(hour).start();
       });
   }
 
@@ -200,7 +259,13 @@ public class OSCN extends Application{
   }
 
   private String getAIValues() { // Goes through every threat and retrieves their name and AI level to print as text.
-    String output = "Difficulty Values";
+    String output = "Click on the icons to\nedit their difficulties.\n\nSelected: ";
+    if (selectedIndex == -1) {
+      output = output + "None";
+    } else {
+      output = output + threats[selectedIndex].getName();
+    }
+    output = output + "\n\nDifficulty Values";
     for (Threat t : threats) {
       output = output + "\n" + t.getName() + ": " + t.getDifficulty();
       if (t.dxIsActive()) {
@@ -211,6 +276,32 @@ public class OSCN extends Application{
   }
   private void updateAIValues() { // I literally only made this so I wouldn't have to type a long line 20 times.
     aiValue.setText(getAIValues());
+  }
+
+  // time-related methods
+  public static void updateTime() {
+    currentTime.setText(printTime());
+  }
+  private static String printTime() { // This is so that I wouldn't have to type it repeatedly.
+    if (nightHour < 0) {
+      return (nightHour + 12) + " PM";
+    } else if (nightHour == 0){
+      return "12 AM";
+    } else {
+      return nightHour + " AM";
+    }
+  }
+  public static int getTime() {
+    return nightHour;
+  }
+  public static void progressTime() { // progresses time by 1 hour. Can be regressed with negative numbers
+    progressTime(1);
+  }
+  public static void progressTime(int hours) { // progresses time by the specified number of hours. Can be regressed with negative numbers
+    nightHour += hours;
+  }
+  public static void setTime(int time) { // sets the time to a specific hour after 12 AM.
+    nightHour = time;
   }
 }
 
@@ -361,6 +452,48 @@ class Red extends Threat{ // Code for Red/Foxy
   }
   public Red() {
       this(0, 0);
+  }
+}
+
+class Timer implements Runnable{
+  long waitPeriod;
+
+  public Timer() {
+    this(5000);
+  }
+  public Timer(long waitPeriod) {
+    this.waitPeriod = waitPeriod;
+  }
+
+  public void run(){
+    try {
+      wait(waitPeriod);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
+  }
+}
+class NightTimer implements Runnable{
+  long waitPeriod;
+
+  public NightTimer() {
+    this(60000);
+  }
+  public NightTimer(long waitPeriod) {
+    this.waitPeriod = waitPeriod;
+  }
+
+  public void run(){
+    while (OSCN.getTime() < 6) {
+      try {
+        wait(waitPeriod);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      }
+      IO.println("1 minute has passed");
+      OSCN.progressTime();
+      OSCN.updateTime();
+    }
   }
 }
 
