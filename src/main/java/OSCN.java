@@ -57,7 +57,7 @@ public class OSCN extends Application{
   static Text remainingPower = text("POWER", 20, 880, cameras);
 
   // Stage and menuScene on the outside so that I can access it in outside methods
-  private static Stage stage;
+  public static Stage stage;
   private static Scene menuScene;
 
   // Creates the threads beforehand
@@ -388,11 +388,16 @@ public class OSCN extends Application{
 
   // methods to handle events
   private void returnToMenu(NightEvent event) {
+    stopNight();
     for (Thread t : threadsList) {
-      t.interrupt();
+      synchronized (t) {
+        t.notify();
+      }
     }
-    stage.setScene(menuScene);
-    stage.show();
+    Platform.runLater(() -> {
+      stage.setScene(menuScene);
+      stage.show();
+    });
   }
   public static Stage getStage() {
     return stage;
