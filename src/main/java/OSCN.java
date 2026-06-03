@@ -31,6 +31,13 @@ public class OSCN extends Application{
   public static final Color DEFAULT_COLOR = Color.BLACK;
   public static final double DEFAULT_WIDTH = 1.0;
 
+  // Creates the custom colors used for the threats.
+  public static Color customBrown = Color.web("6e4d10");
+  public static Color customBlue = Color.web("3335ab");
+  public static Color customYellow = Color.web("e6eb6e");
+  public static Color customCupcake = Color.web("f9abff");
+  public static Color customRed = Color.web("962626");
+
   // initializes the threats at the start for easier processing later.
   Brown brown = new Brown(0, 0);
   Blue blue = new Blue(0, 0);
@@ -38,6 +45,9 @@ public class OSCN extends Application{
   Red red = new Red(0, 0);
 
   Threat[] threats = {brown, blue, yellow, red};
+
+  // Generates the renderings of the threats that should be shown on the cameras
+  static Circle cupcake = drawCircle(-5, -5, 0, customCupcake, cameras);
 
   // Text that shows the AI values of the threats. (Part 1)
   Text aiValue = text(getAIValues(), 1300, 350, menu); // I had to move this out here for some reason or it wouldn't work.
@@ -56,6 +66,21 @@ public class OSCN extends Application{
   // The time to show
   static Text remainingPower = text("POWER", 20, 880, cameras);
 
+  // The camera that is actively being looked at & the camera names
+  private static int currentCamera = 0; // refers to the index of the camera
+  private static final String[] CAMERA_NAMES = {
+    "Loop - North Section", // Camera # 1
+    "Loop - Northeast Section", // Camera # 2
+    "Loop - East Section", // Camera # 3
+    "Loop - Southeast Section", // Camera # 4
+    "Loop - South Section", // Camera # 5
+    "Loop - Southwest Section", // Camera # 6
+    "Loop - West Section", // Camera # 7
+    "Loop - Northwest Section", // Camera # 8
+    "West Hallway", // Camera # 9
+    "East Hallway" // Camera # 10
+  };
+
   // Stage and menuScene on the outside so that I can access it in outside methods
   public static Stage stage;
   private static Scene menuScene;
@@ -71,18 +96,15 @@ public class OSCN extends Application{
       this.stage = primaryStage;
       stage.addEventFilter(NightEvent.NIGHT_END, this::returnToMenu);
 
+      // sets listeners for events
+      //cupcake.addEventFilter(ThreatEvent.CUPCAKE_ANY, Yellow::cupcakeCheck);
+
       // adds the threads to the list of threads for later control.
       for (int i = 0; i < threats.length; i++) {
         threadsList[i] = threats[i];
       }
       threadsList[threadsList.length - 2] = hour;
       threadsList[threadsList.length - 1] = generator;
-
-      // Creates the custom colors used for the threats.
-      Color customBrown = Color.web("6e4d10");
-      Color customBlue = Color.web("3335ab");
-      Color customYellow = Color.web("e6eb6e");
-      Color customRed = Color.web("962626");
 
       // Draws the icons for the threats. Placeholders for now
       Rectangle brownIcon = drawRect(50, 50, 100, 100, customBrown, menu);
@@ -91,7 +113,7 @@ public class OSCN extends Application{
       Rectangle redIcon = drawRect(500, 50, 100, 100, customRed, menu);
 
       // Loads the map to be used later
-      ImageView map = drawImage("src/assets/images/officeMap.png", 500, 500, 320, 530, cameras);
+      ImageView map = drawImage("src/assets/images/officeMap.png", 1415, 610, 160, 265, cameras);
 
       // The text that is to show for character descriptions.
       Text desc = text("Hover over the icons above for character mechanics!", 50, 300, menu);
@@ -109,6 +131,9 @@ public class OSCN extends Application{
       Button setAllMax = drawButton("Set All 20", 1300, 150, 250, 50, 30, menu);
       Button dxMode = drawButton("Toggle DX", 1300, 200, 250, 50, 30, menu);
       Button dxModeAll = drawButton("Toggle All DX", 1300, 250, 250, 50, 30, menu);
+
+      // Camera Buttons
+      CameraButton camOneButton = drawCamButton("1", 50, 450, 30, 30, 25, cameras, 0);
 
       // Button to start the night
       Button startNight = drawButton("Begin Night", 1300, 800, 250, 50, 30, menu);
@@ -291,6 +316,21 @@ public class OSCN extends Application{
       button.setFont(Font.font(t));
       return button;
   }
+  public static CameraButton drawCamButton(String str, int x, int y, int w, int h, int t, Group group, int i) {
+      // parameters: Button text, x position, y position, width, height, font size, group to include in, index
+      if (w < 0 || h < 0 || t < 0) {
+        throw new IllegalArgumentException("Dimensions and font size cannot be negative!");
+      }
+
+      CameraButton button = new CameraButton(str);
+      button.setPrefWidth(w);
+      button.setPrefHeight(h);
+      button.relocate(x, y);
+      group.getChildren().add(button);
+      button.setFont(Font.font(t));
+      button.setIndex(i);
+      return button;
+  }
 
   public void setIndex(int index) {
       selectedIndex = index;
@@ -373,6 +413,34 @@ public class OSCN extends Application{
   }
   public static void setPower(int num) { // sets power to a certain percentage. 100 corresponds to 1% power.
     power = num;
+  }
+
+  // camera-related methods
+  public static int getCurrentCamera() {
+    return currentCamera;
+  }
+  private static String getCurrentCameraName() {
+    return CAMERA_NAMES[currentCamera];
+  }
+  public static String cameraToString() {
+    return "Camera " + (currentCamera + 1) + ": " + getCurrentCameraName();
+  }
+  public static void setCamera(int cameraIndex) {
+    currentCamera = cameraIndex;
+  }
+  public static void nextCamera() {
+    if (currentCamera < 9) {
+      currentCamera++;
+    } else {
+      setCamera(0);
+    }
+  }
+  public static void prevCamera() {
+    if (currentCamera > 0) {
+      currentCamera--;
+    } else {
+      setCamera(9);
+    }
   }
 
   // methods to start and stop the night

@@ -1,9 +1,11 @@
 PowerDrain.class
 NightEvent.class
+CameraButton.class
 NightTimer.class
 Brown.class
 Threat.class
 Blue.class
 OSCN.class
+ThreatEvent.class
 Yellow.class
 Red.class
