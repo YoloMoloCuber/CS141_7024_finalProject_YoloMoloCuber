@@ -47,6 +47,8 @@ public class OSCN extends Application{
 
   Threat[] threats = {brown, blue, yellow, red};
 
+  // Creates the sound effects
+
   // Generates the renderings of the threats that should be shown on the cameras
   static Circle cupcake = drawCircle(-5, -5, 0, customCupcake, cameras);
 
@@ -97,7 +99,7 @@ public class OSCN extends Application{
       this.stage = primaryStage;
       stage.addEventFilter(NightEvent.NIGHT_END, this::returnToMenu);
       stage.addEventFilter(NightEvent.NIGHT_CAMERAS, this::refreshCameras);
-      stage.addEventFilter(ThreatEvent, Event::fireEvent());
+      stage.addEventFilter(ThreatEvent.CUPCAKE_SPAWN, this::cupcakeSpawnCue);
 
       // sets listeners for events
       //cupcake.addEventFilter(ThreatEvent.CUPCAKE_ANY, Yellow::cupcakeCheck);
@@ -408,7 +410,15 @@ public class OSCN extends Application{
   }
 
   // Renders image from src/assets/audio
-  //public MediaPlayer createSFX(String medDir) [WIP]
+  public MediaPlayer createSFX(String medDir) {
+    File file = new File(medDir);
+    if (!file.exists()) {
+      throw new IllegalArgumentException();
+    }
+    Media sound = new Media(file.toURI().toString());
+    MediaPlayer soundPlayer = new MediaPlayer(sound);
+    return soundPlayer;
+  }
 
   private String getAIValues() { // Goes through every threat and retrieves their name and AI level to print as text.
     String output = "Click on the icons to\nedit their difficulties.\n\nSelected: ";
@@ -516,6 +526,9 @@ public class OSCN extends Application{
   }
 
   // methods to handle events
+  public static Stage getStage() {
+    return stage;
+  }
   private void returnToMenu(NightEvent event) {
     stopNight();
     for (Thread t : threadsList) {
@@ -528,8 +541,11 @@ public class OSCN extends Application{
       stage.show();
     });
   }
-  public static Stage getStage() {
-    return stage;
+  private void cupcakeSpawnCue() {
+
+  }
+  private void refreshCameras() {
+
   }
 }
 // to build, you'll run
