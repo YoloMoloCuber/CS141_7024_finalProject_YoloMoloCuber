@@ -11,6 +11,7 @@
 
 import javafx.application.*;
 import javafx.scene.*;
+import javafx.scene.media.*;
 import javafx.scene.image.*;
 import javafx.scene.paint.*;
 import javafx.scene.shape.*;
@@ -95,6 +96,8 @@ public class OSCN extends Application{
       // sets the stage to primaryStage.
       this.stage = primaryStage;
       stage.addEventFilter(NightEvent.NIGHT_END, this::returnToMenu);
+      stage.addEventFilter(NightEvent.NIGHT_CAMERAS, this::refreshCameras);
+      stage.addEventFilter(ThreatEvent, Event::fireEvent());
 
       // sets listeners for events
       //cupcake.addEventFilter(ThreatEvent.CUPCAKE_ANY, Yellow::cupcakeCheck);
@@ -390,6 +393,7 @@ public class OSCN extends Application{
       selectedIndex = index;
   }
 
+  // Renders images from src/assets/images
   public ImageView drawImage(String imgDir, int x, int y, int w, int h, Group group) throws FileNotFoundException {
     Image myImage = new Image(new FileInputStream(imgDir)); // This is what loads our image into the program
     ImageView imageOut = new ImageView(myImage);
@@ -402,6 +406,9 @@ public class OSCN extends Application{
     group.getChildren().add(imageOut);
     return imageOut;
   }
+
+  // Renders image from src/assets/audio
+  //public MediaPlayer createSFX(String medDir) [WIP]
 
   private String getAIValues() { // Goes through every threat and retrieves their name and AI level to print as text.
     String output = "Click on the icons to\nedit their difficulties.\n\nSelected: ";
