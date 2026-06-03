@@ -133,7 +133,16 @@ public class OSCN extends Application{
       Button dxModeAll = drawButton("Toggle All DX", 1300, 250, 250, 50, 30, menu);
 
       // Camera Buttons
-      CameraButton camOneButton = drawCamButton("1", 50, 450, 30, 30, 25, cameras, 0);
+      CameraButton camOneButton = drawCamButton("1", 1475, 618, 40, 40, 15, cameras, 0);
+      CameraButton camTwoButton = drawCamButton("2", 1528, 618, 40, 40, 15, cameras, 1);
+      CameraButton camThrButton = drawCamButton("3", 1528, 671, 40, 40, 15, cameras, 2);
+      CameraButton camFouButton = drawCamButton("4", 1528, 724, 40, 40, 15, cameras, 3);
+      CameraButton camFivButton = drawCamButton("5", 1475, 724, 40, 40, 15, cameras, 4);
+      CameraButton camSixButton = drawCamButton("6", 1422, 724, 40, 40, 15, cameras, 5);
+      CameraButton camSevButton = drawCamButton("7", 1422, 671, 40, 40, 15, cameras, 6);
+      CameraButton camEigButton = drawCamButton("8", 1422, 618, 40, 40, 15, cameras, 7);
+      CameraButton camNinButton = drawCamButton("9", 1422, 777, 40, 40, 15, cameras, 8);
+      CameraButton camTenButton = drawCamButton("10", 1528, 777, 40, 40, 15, cameras, 9);
 
       // Button to start the night
       Button startNight = drawButton("Begin Night", 1300, 800, 250, 50, 30, menu);
@@ -267,6 +276,47 @@ public class OSCN extends Application{
       cameraDown.setOnMouseClicked(e -> {
         stage.setScene(officeScene);
       });
+
+      camOneButton.setOnMouseClicked(e -> {
+        setCamera(camOneButton.getIndex());
+        IO.println("Camera 1 clicked");
+      });
+      camTwoButton.setOnMouseClicked(e -> {
+        setCamera(camTwoButton.getIndex());
+        IO.println("Camera 2 clicked");
+      });
+      camThrButton.setOnMouseClicked(e -> {
+        setCamera(camThrButton.getIndex());
+        IO.println("Camera 3 clicked");
+      });
+      camFouButton.setOnMouseClicked(e -> {
+        setCamera(camFouButton.getIndex());
+        IO.println("Camera 4 clicked");
+      });
+      camFivButton.setOnMouseClicked(e -> {
+        setCamera(camFivButton.getIndex());
+        IO.println("Camera 5 clicked");
+      });
+      camSixButton.setOnMouseClicked(e -> {
+        setCamera(camSixButton.getIndex());
+        IO.println("Camera 6 clicked");
+      });
+      camSevButton.setOnMouseClicked(e -> {
+        setCamera(camSevButton.getIndex());
+        IO.println("Camera 7 clicked");
+      });
+      camEigButton.setOnMouseClicked(e -> {
+        setCamera(camEigButton.getIndex());
+        IO.println("Camera 8 clicked");
+      });
+      camNinButton.setOnMouseClicked(e -> {
+        setCamera(camNinButton.getIndex());
+        IO.println("Camera 9 clicked");
+      });
+      camTenButton.setOnMouseClicked(e -> {
+        setCamera(camTenButton.getIndex());
+        IO.println("Camera 10 clicked");
+      });
   }
 
   public static Rectangle drawRect(int x, int y, int w, int h, Group group){
@@ -323,8 +373,12 @@ public class OSCN extends Application{
       }
 
       CameraButton button = new CameraButton(str);
+      button.setMinWidth(w);
+      button.setMinHeight(h);
       button.setPrefWidth(w);
       button.setPrefHeight(h);
+      button.setMaxWidth(w);
+      button.setMaxHeight(h);
       button.relocate(x, y);
       group.getChildren().add(button);
       button.setFont(Font.font(t));
@@ -423,7 +477,7 @@ public class OSCN extends Application{
     return CAMERA_NAMES[currentCamera];
   }
   public static String cameraToString() {
-    return "Camera " + (currentCamera + 1) + ": " + getCurrentCameraName();
+    return "CAM " + (currentCamera + 1) + ": " + getCurrentCameraName();
   }
   public static void setCamera(int cameraIndex) {
     currentCamera = cameraIndex;
