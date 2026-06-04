@@ -43,10 +43,10 @@ public class OSCN extends Application{
   public static Color customRed = Color.web("962626");
 
   // initializes the threats at the start for easier processing later.
-  static Brown brown = new Brown(0, 0);
-  static Blue blue = new Blue(0, 0);
-  static Yellow yellow = new Yellow(0, 0);
-  static Red red = new Red(0, 0);
+  private Brown brown = new Brown(0, 0);
+  private Blue blue = new Blue(0, 0);
+  private Yellow yellow = new Yellow(0, 0);
+  private Red red = new Red(0, 0);
 
   Threat[] threats = {brown, blue, yellow, red};
 
@@ -550,7 +550,12 @@ public class OSCN extends Application{
   private void returnToMenu(NightEvent event) {
     stopNight();
 
-    executor.shutdown();
+    for (Threat t : threats) {
+      t.terminate();
+    }
+    hour.terminate();
+    generator.terminate();
+    executor.shutdownNow();
 
     Platform.runLater(() -> {
       stage.setScene(menuScene);

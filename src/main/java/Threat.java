@@ -1,4 +1,4 @@
-public class Threat extends Thread{
+public abstract class Threat implements Runnable{
   public final int THREAT_INDEX; // Index of the threat in the threat array.
   protected int difficulty; // AI level, how often the threat should move
   protected int failCount = 0; // counts the number of failed movements
@@ -10,6 +10,8 @@ public class Threat extends Thread{
   protected final String DX_DESCRIPTION; // Description of the DX mechanic that they have.
   protected boolean dxMode = false; // Just indicates if dxMode is on or off
   protected long movementTimer; // How long threats should wait in between movements
+  protected volatile boolean terminateSwitch = false;
+  protected volatile Thread workerThread;
 
   // Constructors
   public Threat(int d, int l, int i, String name, String desc, String dxDesc, long millis) {
@@ -32,6 +34,21 @@ public class Threat extends Thread{
   }
   public Threat() {
       this (0, 0, 0, "unnamed", "Placeholder", "DX Placeholder", 5000);
+  }
+
+  // termination methods
+  public terminate() { // Kills the thread
+    terminateSwitch = true;
+
+    if (workerThread != null) {
+      workerThread.interrupt();
+    }
+
+    IO.println("Terminated Process: Threat");
+  }
+  public void reset() { // resets the threat back to its starting spot.
+    location = DEFAULT_LOCATION;
+    failCount = 0;
   }
 
   // Accessor methods
@@ -105,18 +122,17 @@ public class Threat extends Thread{
   // Functional methods
   public void run() {
     synchronized (this) {
-      while (OSCN.isNightActive()) {
+      while (!terminateSwitch) {
         try {
-          wait(movementTimer);
-        } catch (InterruptedException e) {}
+          Thread.sleep(movementTimer);
+        } catch (InterruptedException e) { if (terminateSwitch) return; }
+
+        if (terminateSwitch) return;
 
         IO.println(getThreatName() + " attempted movement. Suceeded? " + Boolean.toString(movementCheck()));
+
       }
     }
-  }
-  public void reset() { // resets the threat back to its starting spot.
-    location = DEFAULT_LOCATION;
-    failCount = 0;
   }
   protected boolean movementCheck(int maxNum) { // picks a random number from 1 to 20.
     return (int)(Math.ceil(Math.random() * (maxNum))) <= difficulty;

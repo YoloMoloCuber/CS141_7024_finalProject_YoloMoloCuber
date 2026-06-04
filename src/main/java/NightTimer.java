@@ -6,8 +6,9 @@
 import javafx.event.Event;
 import javafx.event.EventType;
 
- public class NightTimer extends Thread{
+ public class NightTimer implements Runnable{
    private long waitPeriod;
+   private volatile boolean terminateSwitch = false;
 
    public NightTimer() {
      this(60000);
@@ -16,16 +17,25 @@ import javafx.event.EventType;
      this.waitPeriod = waitPeriod;
    }
 
+   public terminate() {
+     terminateSwitch = true;
+     this.interrupt();
+     this.notify();
+     IO.println("Terminated Process: Night Timer");
+   }
+
    public void run() {
      synchronized (this) {
-       while (OSCN.getTime() < 6 && OSCN.isNightActive()) {
+       while (OSCN.getTime() < 6 && !terminateSwitch) {
          try {
            this.wait(waitPeriod);
          } catch (InterruptedException e) {
          }
 
-         OSCN.progressTime();
-         OSCN.updateTime();
+         if (terminateSwitch) return; else {
+           OSCN.progressTime();
+           OSCN.updateTime();
+         }
        }
 
        if (OSCN.isNightActive()) {
