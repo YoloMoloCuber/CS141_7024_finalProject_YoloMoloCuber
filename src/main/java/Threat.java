@@ -38,6 +38,9 @@ public class Threat extends Thread{
   public int getDifficulty() { // Returns the AI levels of the threat
     return difficulty;
   }
+  public int getLocation() {
+    return location;
+  }
   public String getThreatName() { // Returns the description text.
     return NAME;
   }
@@ -66,6 +69,16 @@ public class Threat extends Thread{
     }
 
     difficulty = diff;
+  }
+  public void setLocation(int l) {
+    try {
+      if (location < 0) {
+        throw new IllegalArgumentException();
+      }
+      location = l;
+    } catch (IllegalArgumentException e) {
+      IO.println("Cannot have a negative location index!");
+    }
   }
   public void incrementDifficulty() { // Increases the AI value by 1
     incrementDifficulty(false);
@@ -105,10 +118,10 @@ public class Threat extends Thread{
     location = DEFAULT_LOCATION;
     failCount = 0;
   }
-  private boolean movementCheck(int maxNum) { // picks a random number from 1 to 20.
+  protected boolean movementCheck(int maxNum) { // picks a random number from 1 to 20.
     return (int)(Math.ceil(Math.random() * (maxNum))) <= difficulty;
   }
-  private boolean movementCheck() { // default of 20
+  protected boolean movementCheck() { // default of 20
     return movementCheck(20);
   }
 }

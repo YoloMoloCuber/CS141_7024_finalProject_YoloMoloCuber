@@ -18,7 +18,7 @@ import javafx.event.EventType;
 
    public void run() {
      synchronized (this) {
-       while (OSCN.getTime() < 1 && OSCN.isNightActive()) {
+       while (OSCN.getTime() < 6 && OSCN.isNightActive()) {
          try {
            this.wait(waitPeriod);
          } catch (InterruptedException e) {

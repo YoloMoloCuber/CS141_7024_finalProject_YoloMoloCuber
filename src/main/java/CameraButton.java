@@ -20,6 +20,10 @@ public class CameraButton extends Button {
   public CameraButton(String text) {
     super(text);
   }
+  public CameraButton(String text, int i) {
+    super(text);
+    index = i;
+  }
   public CameraButton(String text, Node graphic) {
     super(text, graphic);
   }

@@ -40,17 +40,19 @@ public class OSCN extends Application{
   public static Color customRed = Color.web("962626");
 
   // initializes the threats at the start for easier processing later.
-  Brown brown = new Brown(0, 0);
-  Blue blue = new Blue(0, 0);
-  Yellow yellow = new Yellow(0, 0);
-  Red red = new Red(0, 0);
+  static Brown brown = new Brown(0, 0);
+  static Blue blue = new Blue(0, 0);
+  static Yellow yellow = new Yellow(0, 0);
+  static Red red = new Red(0, 0);
 
   Threat[] threats = {brown, blue, yellow, red};
 
   // Creates the sound effects
+  MediaPlayer cupcakeSpawnSound = createSFX("src/assets/audio/chickenCall.wav");
 
   // Generates the renderings of the threats that should be shown on the cameras
   static Circle cupcake = drawCircle(-5, -5, 0, customCupcake, cameras);
+  static Rectangle yellowThreat = drawRect(-5, -5, 0, 0, customYellow, cameras);
 
   // Text that shows the AI values of the threats. (Part 1)
   Text aiValue = text(getAIValues(), 1300, 350, menu); // I had to move this out here for some reason or it wouldn't work.
@@ -89,7 +91,7 @@ public class OSCN extends Application{
   private static Scene menuScene;
 
   // Creates the threads beforehand
-  static NightTimer hour = new NightTimer(10000);
+  static NightTimer hour = new NightTimer();
   static PowerDrain generator = new PowerDrain();
 
   Thread[] threadsList = new Thread[threats.length + 2];
@@ -100,9 +102,11 @@ public class OSCN extends Application{
       stage.addEventFilter(NightEvent.NIGHT_END, this::returnToMenu);
       stage.addEventFilter(NightEvent.NIGHT_CAMERAS, this::refreshCameras);
       stage.addEventFilter(ThreatEvent.CUPCAKE_SPAWN, this::cupcakeSpawnCue);
+      stage.addEventFilter(ThreatEvent.CUPCAKE_LEAVE, this::cupcakeLeaveCue);
+      stage.addEventFilter(ThreatEvent.DEATH, this::getDeathDetails);
 
       // sets listeners for events
-      //cupcake.addEventFilter(ThreatEvent.CUPCAKE_ANY, Yellow::cupcakeCheck);
+      cupcake.addEventFilter(ThreatEvent.CUPCAKE_ANY, yellow::cupcakeCheck);
 
       // adds the threads to the list of threads for later control.
       for (int i = 0; i < threats.length; i++) {
@@ -277,50 +281,67 @@ public class OSCN extends Application{
       // Office controls
       cameraUp.setOnMouseClicked(e -> {
         stage.setScene(cameraScene);
+        refreshCameras();
       });
       cameraDown.setOnMouseClicked(e -> {
         stage.setScene(officeScene);
       });
 
+      // Camera Button controls, would not load if this was written any other way for some reason
       camOneButton.setOnMouseClicked(e -> {
         setCamera(camOneButton.getIndex());
         IO.println("Camera 1 clicked");
+        refreshCameras();
       });
       camTwoButton.setOnMouseClicked(e -> {
         setCamera(camTwoButton.getIndex());
         IO.println("Camera 2 clicked");
+        refreshCameras();
       });
       camThrButton.setOnMouseClicked(e -> {
         setCamera(camThrButton.getIndex());
+        refreshCameras();
         IO.println("Camera 3 clicked");
       });
       camFouButton.setOnMouseClicked(e -> {
         setCamera(camFouButton.getIndex());
+        refreshCameras();
         IO.println("Camera 4 clicked");
       });
       camFivButton.setOnMouseClicked(e -> {
         setCamera(camFivButton.getIndex());
+        refreshCameras();
         IO.println("Camera 5 clicked");
       });
       camSixButton.setOnMouseClicked(e -> {
         setCamera(camSixButton.getIndex());
+        refreshCameras();
         IO.println("Camera 6 clicked");
       });
       camSevButton.setOnMouseClicked(e -> {
         setCamera(camSevButton.getIndex());
+        refreshCameras();
         IO.println("Camera 7 clicked");
       });
       camEigButton.setOnMouseClicked(e -> {
         setCamera(camEigButton.getIndex());
+        refreshCameras();
         IO.println("Camera 8 clicked");
       });
       camNinButton.setOnMouseClicked(e -> {
         setCamera(camNinButton.getIndex());
+        refreshCameras();
         IO.println("Camera 9 clicked");
       });
       camTenButton.setOnMouseClicked(e -> {
         setCamera(camTenButton.getIndex());
+        refreshCameras();
         IO.println("Camera 10 clicked");
+      });
+
+      // Threat interactions
+      cupcake.setOnMouseClicked(e -> {
+        Event.fireEvent(cupcake, new ThreatEvent(ThreatEvent.CUPCAKE_MOVE));
       });
   }
 
@@ -377,7 +398,7 @@ public class OSCN extends Application{
         throw new IllegalArgumentException("Dimensions and font size cannot be negative!");
       }
 
-      CameraButton button = new CameraButton(str);
+      CameraButton button = new CameraButton(str, i);
       button.setMinWidth(w);
       button.setMinHeight(h);
       button.setPrefWidth(w);
@@ -387,7 +408,6 @@ public class OSCN extends Application{
       button.relocate(x, y);
       group.getChildren().add(button);
       button.setFont(Font.font(t));
-      button.setIndex(i);
       return button;
   }
 
@@ -411,12 +431,8 @@ public class OSCN extends Application{
 
   // Renders image from src/assets/audio
   public MediaPlayer createSFX(String medDir) {
-    File file = new File(medDir);
-    if (!file.exists()) {
-      throw new IllegalArgumentException();
-    }
-    Media sound = new Media(file.toURI().toString());
-    MediaPlayer soundPlayer = new MediaPlayer(sound);
+    final Media sound = new Media(new File(medDir).toURI().toString());
+    final MediaPlayer soundPlayer = new MediaPlayer(sound);
     return soundPlayer;
   }
 
@@ -517,9 +533,18 @@ public class OSCN extends Application{
   // methods to start and stop the night
   public static void startNight() { // sets activeNight to true
     activeNight = true;
+
   }
   public static void stopNight() { // sets activeNight to false
     activeNight = false;
+
+    // Resets the threads for a new night
+    hour = new NightTimer();
+    generator = new PowerDrain();
+    brown = new Brown(brown.getDifficulty(), 0);
+    blue = new Blue(blue.getDifficulty(), 0);
+    yellow = new Yellow(yellow.getDifficulty(), 0);
+    red = new Red(red.getDifficulty(), 0);
   }
   public static boolean isNightActive() {
     return activeNight;
@@ -540,13 +565,73 @@ public class OSCN extends Application{
       stage.setScene(menuScene);
       stage.show();
     });
+    event.consume();
   }
-  private void cupcakeSpawnCue() {
+  private void cupcakeSpawnCue(ThreatEvent event) {
+    cupcakeSpawnSound.setRate(1.0);
+    cupcakeSpawnSound.stop();
+    cupcakeSpawnSound.play();
+    yellow.setCupcakeState(true);
+    refreshCameras();
 
+    event.consume();
   }
-  private void refreshCameras() {
+  private void cupcakeLeaveCue(ThreatEvent event) {
+    cupcakeSpawnSound.setRate(0.75);
+    cupcakeSpawnSound.stop();
+    cupcakeSpawnSound.play();
+    yellow.setCupcakeState(false);
+    refreshCameras();
 
+    event.consume();
   }
+  private synchronized void refreshCameras(NightEvent event) {
+    if (event.getEventType().getName().equals("NIGHT_CAMERAS_REFRESH")) {
+      refreshCameras();
+    }
+  }
+  private synchronized void refreshCameras() {
+    IO.println("Camera Refresh Called, Current Camera: " + getCurrentCamera());
+    if (yellow.getLocation() == getCurrentCamera()) {
+      if (yellow.isCupcakeActive()) {
+        yellowThreat.setX(100);
+        yellowThreat.setY(700);
+        yellowThreat.setWidth(300);
+        yellowThreat.setHeight(400);
+      } else {
+        yellowThreat.setX(100);
+        yellowThreat.setY(300);
+        yellowThreat.setWidth(180);
+        yellowThreat.setHeight(240);
+      }
+    } else {
+      yellowThreat.setX(-5);
+      yellowThreat.setY(-5);
+      yellowThreat.setWidth(0);
+      yellowThreat.setHeight(0);
+    }
+    if (yellow.isCupcakeActive()) {
+      if (yellow.getCupcakeLocation() == getCurrentCamera()) {
+        cupcake.setCenterX(Math.floor(Math.random() * 601) + 500);
+        cupcake.setCenterY(Math.floor(Math.random() * 301) + 300);
+        cupcake.setRadius(50);
+      } else {
+        cupcake.setCenterX(-5);
+        cupcake.setCenterY(-5);
+        cupcake.setRadius(0);
+      }
+    } else {
+      cupcake.setCenterX(-5);
+      cupcake.setCenterY(-5);
+      cupcake.setRadius(0);
+    }
+  }
+  private void getDeathDetails(ThreatEvent event) {
+    Event.fireEvent(OSCN.stage, new NightEvent(NightEvent.NIGHT_END));
+
+    event.consume();
+  }
+
 }
 // to build, you'll run
 // mvn clean javafx:run
