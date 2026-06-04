@@ -22,6 +22,9 @@ import javafx.scene.input.*;
 import javafx.stage.*;
 import javafx.event.*;
 import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.lang.*;
 import java.io.*;
 
@@ -49,6 +52,7 @@ public class OSCN extends Application{
 
   // Creates the sound effects
   MediaPlayer cupcakeSpawnSound = createSFX("src/assets/audio/chickenCall.wav");
+  MediaPlayer cupcakeLeaveSound = createSFX("src/assets/audio/chickenCall.wav");
 
   // Generates the renderings of the threats that should be shown on the cameras
   static Circle cupcake = drawCircle(-5, -5, 0, customCupcake, cameras);
@@ -94,7 +98,10 @@ public class OSCN extends Application{
   static NightTimer hour = new NightTimer();
   static PowerDrain generator = new PowerDrain();
 
-  Thread[] threadsList = new Thread[threats.length + 2];
+  int totalTasks = threats.length + 2;
+
+  // Creates an ExcexutorService item for later use
+  ExecutorService executor = Executors.newFixedThreadPool(totalTasks);
 
   public void start(Stage primaryStage) throws FileNotFoundException {
       // sets the stage to primaryStage.
@@ -107,13 +114,6 @@ public class OSCN extends Application{
 
       // sets listeners for events
       cupcake.addEventFilter(ThreatEvent.CUPCAKE_ANY, yellow::cupcakeCheck);
-
-      // adds the threads to the list of threads for later control.
-      for (int i = 0; i < threats.length; i++) {
-        threadsList[i] = threats[i];
-      }
-      threadsList[threadsList.length - 2] = hour;
-      threadsList[threadsList.length - 1] = generator;
 
       // Draws the icons for the threats. Placeholders for now
       Rectangle brownIcon = drawRect(50, 50, 100, 100, customBrown, menu);
@@ -270,11 +270,12 @@ public class OSCN extends Application{
         updatePower();
 
         // starts the Threads
-        hour.start();
-        generator.start();
+        executor = Executors.newFixedThreadPool(totalTasks);
+        executor.execute(hour);
+        executor.execute(generator);
         for (Threat t : threats) {
           t.reset();
-          t.start();
+          executor.execute(t);
         }
       });
 
@@ -537,14 +538,6 @@ public class OSCN extends Application{
   }
   public static void stopNight() { // sets activeNight to false
     activeNight = false;
-
-    // Resets the threads for a new night
-    hour = new NightTimer();
-    generator = new PowerDrain();
-    brown = new Brown(brown.getDifficulty(), 0);
-    blue = new Blue(blue.getDifficulty(), 0);
-    yellow = new Yellow(yellow.getDifficulty(), 0);
-    red = new Red(red.getDifficulty(), 0);
   }
   public static boolean isNightActive() {
     return activeNight;
@@ -556,14 +549,20 @@ public class OSCN extends Application{
   }
   private void returnToMenu(NightEvent event) {
     stopNight();
-    for (Thread t : threadsList) {
-      synchronized (t) {
-        t.notify();
-      }
-    }
+
+    executor.shutdown();
+
     Platform.runLater(() -> {
       stage.setScene(menuScene);
       stage.show();
+
+      // Resets the threads for a new night
+      hour = new NightTimer();
+      generator = new PowerDrain();
+      brown = new Brown(brown.getDifficulty(), 0);
+      blue = new Blue(blue.getDifficulty(), 0);
+      yellow = new Yellow(yellow.getDifficulty(), 0);
+      red = new Red(red.getDifficulty(), 0);
     });
     event.consume();
   }
@@ -577,9 +576,9 @@ public class OSCN extends Application{
     event.consume();
   }
   private void cupcakeLeaveCue(ThreatEvent event) {
-    cupcakeSpawnSound.setRate(0.75);
-    cupcakeSpawnSound.stop();
-    cupcakeSpawnSound.play();
+    cupcakeLeaveSound.setRate(0.75);
+    cupcakeLeaveSound.stop();
+    cupcakeLeaveSound.play();
     yellow.setCupcakeState(false);
     refreshCameras();
 
