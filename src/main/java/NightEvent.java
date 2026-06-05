@@ -11,6 +11,7 @@ public class NightEvent extends Event {
   public static final EventType<NightEvent> NIGHT = new EventType<>(Event.ANY, "ANY");
   public static final EventType<NightEvent> ANY = NIGHT;
   public static final EventType<NightEvent> NIGHT_END = new EventType<>(NightEvent.ANY, "NIGHT_END");
+  public static final EventType<NightEvent> CLOSE_PROGRAM = new EventType<>(NightEvent.NIGHT_END, "CLOSE_PROGRAM");
   public static final EventType<NightEvent> NIGHT_CAMERAS = new EventType<>(NightEvent.ANY, "NIGHT_CAMERAS");
   public static final EventType<NightEvent> NIGHT_CAMERAS_REFRESH = new EventType<>(NightEvent.NIGHT_CAMERAS, "NIGHT_CAMERAS_REFRESH");
 

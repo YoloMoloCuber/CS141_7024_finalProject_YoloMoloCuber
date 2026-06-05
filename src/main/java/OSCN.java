@@ -181,6 +181,11 @@ public class OSCN extends Application{
       stage.setScene(menuScene);
       stage.show();
 
+      addEscapeHandler(menuScene, stage);
+      addTermEscapeHandler(officeScene, stage);
+      addTermEscapeHandler(cameraScene, stage);
+      addTermEscapeHandler(loadScene, stage);
+
       // Grabs the descriptions for the threats to describe how to deal with threats, also sets the selection index.
       brownIcon.setOnMouseEntered(e -> {
         desc.setText(brown.getDescription() + "\n\nDX Mechanic: " + brown.getDX_Description());
@@ -351,11 +356,6 @@ public class OSCN extends Application{
         IO.println("Camera 10 clicked");
       });
       */
-
-      // Threat interactions
-      cupcake.setOnMouseClicked(e -> {
-        Event.fireEvent(cupcake, new ThreatEvent(ThreatEvent.CUPCAKE_MOVE));
-      });
   }
 
   // rendering shapes
@@ -654,6 +654,39 @@ public class OSCN extends Application{
     return "";
   }
 
+  private void addEscapeHandler(Scene scene, Stage stage) {
+      scene.setOnKeyPressed(event -> {
+          if (event.getCode() == KeyCode.ESCAPE) {
+              Platform.exit();
+          }
+      });
+  }
+  private void addTermEscapeHandler(Scene scene, Stage stage) {
+      scene.setOnKeyPressed(event -> {
+          if (event.getCode() == KeyCode.ESCAPE) {
+            for (Threat t : threats) {
+              t.terminate();
+            }
+            hour.terminate();
+            generator.terminate();
+            executor.shutdownNow();
+            Platform.exit();
+
+            Thread shutdownThread = new Thread(() -> {
+              try {
+
+                boolean finished = executor.awaitTermination(10, TimeUnit.SECONDS);
+                IO.println("Executor shutdown complete: " + finished);
+              } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+              }
+            });
+
+            shutdownThread.setDaemon(true);
+            shutdownThread.start();
+          }
+      });
+  }
 }
 // to build, you'll run
 // mvn clean javafx:run

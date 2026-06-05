@@ -94,15 +94,15 @@ public class Yellow extends Threat{ // Code for Yellow/Chica
         nextLocation = (int)(Math.floor(Math.random() * 8));
         IO.println("Next Location: Camera " + (nextLocation + 1) + "\n Next Cupcake: Camera " + (cupcakeLocation + 1));
       } while (cupcakeLocation == nextLocation);
-
-      do {
-        try {
-          Thread.sleep(movementTimer);
-        } catch (InterruptedException e) {
-          if (terminateSwitch) return;
-        }
-      } while (!movementCheck());
-
+      if (!dxMode) {
+        do {
+          try {
+            Thread.sleep(movementTimer);
+          } catch (InterruptedException e) {
+            if (terminateSwitch) return;
+          }
+        } while (!movementCheck());
+      }
       if (terminateSwitch) return;
 
       location = nextLocation;
@@ -123,7 +123,7 @@ public class Yellow extends Threat{ // Code for Yellow/Chica
       if (cupcakeLocation != location) {
         IO.println("too slow");
         terminateSwitch = true;
-        Platform.runLater(() -> {Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.YELLOW_DEATH});
+        Platform.runLater(() -> {Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.YELLOW_DEATH));});
 
         return;
       } else {
