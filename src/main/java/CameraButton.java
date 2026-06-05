@@ -23,6 +23,11 @@ public class CameraButton extends Button {
   public CameraButton(String text, int i) {
     super(text);
     index = i;
+
+    setOnMouseClicked(e -> {
+      OSCN.setCamera(this.index);
+      IO.println("Camera " + index + " clicked");
+    });
   }
   public CameraButton(String text, Node graphic) {
     super(text, graphic);

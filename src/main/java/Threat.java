@@ -37,7 +37,7 @@ public abstract class Threat implements Runnable{
   }
 
   // termination methods
-  public terminate() { // Kills the thread
+  public void terminate() { // Kills the thread
     terminateSwitch = true;
 
     if (workerThread != null) {
@@ -49,6 +49,7 @@ public abstract class Threat implements Runnable{
   public void reset() { // resets the threat back to its starting spot.
     location = DEFAULT_LOCATION;
     failCount = 0;
+    terminateSwitch = false;
   }
 
   // Accessor methods
@@ -56,6 +57,7 @@ public abstract class Threat implements Runnable{
     return difficulty;
   }
   public int getLocation() {
+    IO.println("Getter sees : Camera" + (location + 1));
     return location;
   }
   public String getThreatName() { // Returns the description text.

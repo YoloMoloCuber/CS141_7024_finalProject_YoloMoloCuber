@@ -29,18 +29,18 @@ import java.lang.*;
 import java.io.*;
 
 public class OSCN extends Application{
-  public static Group menu = new Group();
-  public static Group office = new Group();
-  public static Group cameras = new Group();
-  public static final Color DEFAULT_COLOR = Color.BLACK;
-  public static final double DEFAULT_WIDTH = 1.0;
+  static public Group menu = new Group();
+  static public Group office = new Group();
+  static public Group cameras = new Group();
+  static public final Color DEFAULT_COLOR = Color.BLACK;
+  static public final double DEFAULT_WIDTH = 1.0;
 
   // Creates the custom colors used for the threats.
-  public static Color customBrown = Color.web("6e4d10");
-  public static Color customBlue = Color.web("3335ab");
-  public static Color customYellow = Color.web("e6eb6e");
-  public static Color customCupcake = Color.web("f9abff");
-  public static Color customRed = Color.web("962626");
+  static public final Color CUSTOM_BROWN = Color.web("6e4d10");
+  static public final Color CUSTOM_BLUE = Color.web("3335ab");
+  static public final Color CUSTOM_YELLOW = Color.web("e6eb6e");
+  static public final Color CUSTOM_CUPCAKE = Color.web("f9abff");
+  static public final Color CUSTOM_RED = Color.web("962626");
 
   // initializes the threats at the start for easier processing later.
   private Brown brown = new Brown(0, 0);
@@ -55,19 +55,19 @@ public class OSCN extends Application{
   MediaPlayer cupcakeLeaveSound = createSFX("src/assets/audio/chickenCall.wav");
 
   // Generates the renderings of the threats that should be shown on the cameras
-  static Circle cupcake = drawCircle(-5, -5, 0, customCupcake, cameras);
-  static Rectangle yellowThreat = drawRect(-5, -5, 0, 0, customYellow, cameras);
+  static Circle cupcake = drawCircle(-5, -5, 0, CUSTOM_CUPCAKE, cameras);
+  Rectangle yellowThreat = drawRect(-5, -5, 0, 0, CUSTOM_YELLOW, cameras);
 
   // Text that shows the AI values of the threats. (Part 1)
   Text aiValue = text(getAIValues(), 1300, 350, menu); // I had to move this out here for some reason or it wouldn't work.
 
   // Important variable for selecting threats and altering them later
-  static int selectedIndex = -1;
+  int selectedIndex = -1;
 
   // Keeps track of important night-related information
-  private static int nightHour = 0;
-  private static int power = 10000;
-  private static volatile boolean activeNight = false;
+  static private int nightHour = 0;
+  static private int power = 10000;
+  static private volatile boolean activeNight = false;
 
   // The time to show
   static Text currentTime = text("TIME", 20, 70, cameras);
@@ -76,8 +76,8 @@ public class OSCN extends Application{
   static Text remainingPower = text("POWER", 20, 880, cameras);
 
   // The camera that is actively being looked at & the camera names
-  private static int currentCamera = 0; // refers to the index of the camera
-  private static final String[] CAMERA_NAMES = {
+  static private int currentCamera = 0; // refers to the index of the camera
+  static private final String[] CAMERA_NAMES = {
     "Loop - North Section", // Camera # 1
     "Loop - Northeast Section", // Camera # 2
     "Loop - East Section", // Camera # 3
@@ -91,12 +91,12 @@ public class OSCN extends Application{
   };
 
   // Stage and menuScene on the outside so that I can access it in outside methods
-  public static Stage stage;
-  private static Scene menuScene;
+  static public Stage stage;
+  private Scene menuScene;
 
   // Creates the threads beforehand
-  static NightTimer hour = new NightTimer();
-  static PowerDrain generator = new PowerDrain();
+  NightTimer hour = new NightTimer();
+  PowerDrain generator = new PowerDrain();
 
   int totalTasks = threats.length + 2;
 
@@ -113,13 +113,13 @@ public class OSCN extends Application{
       stage.addEventFilter(ThreatEvent.DEATH, this::getDeathDetails);
 
       // sets listeners for events
-      cupcake.addEventFilter(ThreatEvent.CUPCAKE_ANY, yellow::cupcakeCheck);
+      stage.addEventFilter(ThreatEvent.CUPCAKE_ANY, yellow::cupcakeCheck);
 
       // Draws the icons for the threats. Placeholders for now
-      Rectangle brownIcon = drawRect(50, 50, 100, 100, customBrown, menu);
-      Rectangle blueIcon = drawRect(200, 50, 100, 100, customBlue, menu);
-      Rectangle yellowIcon = drawRect(350, 50, 100, 100, customYellow, menu);
-      Rectangle redIcon = drawRect(500, 50, 100, 100, customRed, menu);
+      Rectangle brownIcon = drawRect(50, 50, 100, 100, CUSTOM_BROWN, menu);
+      Rectangle blueIcon = drawRect(200, 50, 100, 100, CUSTOM_BLUE, menu);
+      Rectangle yellowIcon = drawRect(350, 50, 100, 100, CUSTOM_YELLOW, menu);
+      Rectangle redIcon = drawRect(500, 50, 100, 100, CUSTOM_RED, menu);
 
       // Loads the map to be used later
       ImageView map = drawImage("src/assets/images/officeMap.png", 1415, 610, 160, 265, cameras);
@@ -266,8 +266,10 @@ public class OSCN extends Application{
         stage.setScene(officeScene);
         startNight();
         setTime(0);
+        setPower(10000);
         updateTime();
         updatePower();
+        setCamera(0);
 
         // starts the Threads
         executor = Executors.newFixedThreadPool(totalTasks);
@@ -288,7 +290,7 @@ public class OSCN extends Application{
         stage.setScene(officeScene);
       });
 
-      // Camera Button controls, would not load if this was written any other way for some reason
+      /* Camera Button controls, or, at least, the old way I made these.
       camOneButton.setOnMouseClicked(e -> {
         setCamera(camOneButton.getIndex());
         IO.println("Camera 1 clicked");
@@ -339,6 +341,7 @@ public class OSCN extends Application{
         refreshCameras();
         IO.println("Camera 10 clicked");
       });
+      */
 
       // Threat interactions
       cupcake.setOnMouseClicked(e -> {
@@ -346,10 +349,11 @@ public class OSCN extends Application{
       });
   }
 
-  public static Rectangle drawRect(int x, int y, int w, int h, Group group){
+  // rendering shapes
+  static public Rectangle drawRect(int x, int y, int w, int h, Group group){
       return drawRect(x,y,w,h,DEFAULT_COLOR,group);
   }
-  public static Rectangle drawRect(int x, int y, int w, int h, Color c, Group group){
+  static public Rectangle drawRect(int x, int y, int w, int h, Color c, Group group){
       Rectangle rect = new Rectangle(x, y, w, h);
       rect.setFill(c);
       rect.setStroke(DEFAULT_COLOR);
@@ -358,10 +362,10 @@ public class OSCN extends Application{
       return rect;
   }
 
-  public static Circle drawCircle(int x, int y, int r, Group group){
+  static public Circle drawCircle(int x, int y, int r, Group group){
       return drawCircle(x, y, r, DEFAULT_COLOR, group);
   }
-  public static Circle drawCircle(int x, int y, int r, Color c, Group group){
+  static public Circle drawCircle(int x, int y, int r, Color c, Group group){
       Circle circle = new Circle(x, y, r);
       circle.setFill(c);
       circle.setStroke(DEFAULT_COLOR);
@@ -370,7 +374,7 @@ public class OSCN extends Application{
       return circle;
   }
 
-  public static Text text(String str, int x, int y, Group group){
+  static public Text text(String str, int x, int y, Group group){
         Text text = new Text(str);
         text.setX(x);
         text.setY(y);
@@ -379,7 +383,7 @@ public class OSCN extends Application{
         return text;
   }
 
-  public static Button drawButton(String str, int x, int y, int w, int h, int t, Group group) {
+  static public Button drawButton(String str, int x, int y, int w, int h, int t, Group group) {
       // parameters: Button text, x position, y position, width, height, font size, group to include in.
       if (w < 0 || h < 0 || t < 0) {
         throw new IllegalArgumentException("Dimensions and font size cannot be negative!");
@@ -393,7 +397,7 @@ public class OSCN extends Application{
       button.setFont(Font.font(t));
       return button;
   }
-  public static CameraButton drawCamButton(String str, int x, int y, int w, int h, int t, Group group, int i) {
+  static public CameraButton drawCamButton(String str, int x, int y, int w, int h, int t, Group group, int i) {
       // parameters: Button text, x position, y position, width, height, font size, group to include in, index
       if (w < 0 || h < 0 || t < 0) {
         throw new IllegalArgumentException("Dimensions and font size cannot be negative!");
@@ -417,7 +421,7 @@ public class OSCN extends Application{
   }
 
   // Renders images from src/assets/images
-  public ImageView drawImage(String imgDir, int x, int y, int w, int h, Group group) throws FileNotFoundException {
+  static public ImageView drawImage(String imgDir, int x, int y, int w, int h, Group group) throws FileNotFoundException {
     Image myImage = new Image(new FileInputStream(imgDir)); // This is what loads our image into the program
     ImageView imageOut = new ImageView(myImage);
     imageOut.setX(x); // We then set it's initial position, size, ratio preservation, and if it's traversable, and alt text.
@@ -431,7 +435,7 @@ public class OSCN extends Application{
   }
 
   // Renders image from src/assets/audio
-  public MediaPlayer createSFX(String medDir) {
+  static public MediaPlayer createSFX(String medDir) {
     final Media sound = new Media(new File(medDir).toURI().toString());
     final MediaPlayer soundPlayer = new MediaPlayer(sound);
     return soundPlayer;
@@ -458,10 +462,10 @@ public class OSCN extends Application{
   }
 
   // time-related methods
-  public static void updateTime() {
+  static public void updateTime() {
     currentTime.setText(printTime());
   }
-  private static String printTime() { // This is so that I wouldn't have to type it repeatedly.
+  static private String printTime() { // This is so that I wouldn't have to type it repeatedly.
     if (nightHour < 0) {
       return (nightHour + 12) + " PM";
     } else if (nightHour == 0){
@@ -470,60 +474,61 @@ public class OSCN extends Application{
       return nightHour + " AM";
     }
   }
-  public static int getTime() {
+  static public int getTime() {
     return nightHour;
   }
-  public static void progressTime() { // progresses time by 1 hour. Can be regressed with negative numbers
+  static public void progressTime() { // progresses time by 1 hour. Can be regressed with negative numbers
     progressTime(1);
   }
-  public static void progressTime(int hours) { // progresses time by the specified number of hours. Can be regressed with negative numbers
+  static public void progressTime(int hours) { // progresses time by the specified number of hours. Can be regressed with negative numbers
     nightHour += hours;
   }
-  public static void setTime(int time) { // sets the time to a specific hour after 12 AM.
+  static public void setTime(int time) { // sets the time to a specific hour after 12 AM.
     nightHour = time;
   }
 
   // power-related methods
-  public static void updatePower() {
+  static public void updatePower() {
     remainingPower.setText(printPower() + "%");
   }
-  private static String printPower() {
+  static private String printPower() {
     return ((int) Math.floor((double) power / 100.0)) + "";
   }
-  public static int getPower() {
+  static public int getPower() {
     return power;
   }
-  public static void changePower() { // decreases power by 0.01%
+  static public void changePower() { // decreases power by 0.01%
     changePower(-1);
   }
-  public static void changePower(int num) { // changes power by an inputted amount. Positive numbers increase power, negative numbers decrease it.
+  static public void changePower(int num) { // changes power by an inputted amount. Positive numbers increase power, negative numbers decrease it.
     power += num;
   }
-  public static void setPower(int num) { // sets power to a certain percentage. 100 corresponds to 1% power.
+  static public void setPower(int num) { // sets power to a certain percentage. 100 corresponds to 1% power.
     power = num;
   }
 
   // camera-related methods
-  public static int getCurrentCamera() {
+  static public int getCurrentCamera() {
     return currentCamera;
   }
-  private static String getCurrentCameraName() {
+  static private String getCurrentCameraName() {
     return CAMERA_NAMES[currentCamera];
   }
-  public static String cameraToString() {
+  static public String cameraToString() {
     return "CAM " + (currentCamera + 1) + ": " + getCurrentCameraName();
   }
-  public static void setCamera(int cameraIndex) {
+  static public void setCamera(int cameraIndex) {
     currentCamera = cameraIndex;
+    Event.fireEvent(getStage(), new NightEvent(NightEvent.NIGHT_CAMERAS_REFRESH));
   }
-  public static void nextCamera() {
+  static public void nextCamera() {
     if (currentCamera < 9) {
       currentCamera++;
     } else {
       setCamera(0);
     }
   }
-  public static void prevCamera() {
+  static public void prevCamera() {
     if (currentCamera > 0) {
       currentCamera--;
     } else {
@@ -532,19 +537,19 @@ public class OSCN extends Application{
   }
 
   // methods to start and stop the night
-  public static void startNight() { // sets activeNight to true
+  public void startNight() { // sets activeNight to true
     activeNight = true;
 
   }
-  public static void stopNight() { // sets activeNight to false
+  public void stopNight() { // sets activeNight to false
     activeNight = false;
   }
-  public static boolean isNightActive() {
+  static public boolean isNightActive() {
     return activeNight;
   }
 
   // methods to handle events
-  public static Stage getStage() {
+  static public Stage getStage() {
     return stage;
   }
   private void returnToMenu(NightEvent event) {
@@ -575,7 +580,6 @@ public class OSCN extends Application{
     cupcakeSpawnSound.setRate(1.0);
     cupcakeSpawnSound.stop();
     cupcakeSpawnSound.play();
-    yellow.setCupcakeState(true);
     refreshCameras();
 
     event.consume();
@@ -584,17 +588,16 @@ public class OSCN extends Application{
     cupcakeLeaveSound.setRate(0.75);
     cupcakeLeaveSound.stop();
     cupcakeLeaveSound.play();
-    yellow.setCupcakeState(false);
     refreshCameras();
 
     event.consume();
   }
-  private synchronized void refreshCameras(NightEvent event) {
+  private void refreshCameras(NightEvent event) {
     if (event.getEventType().getName().equals("NIGHT_CAMERAS_REFRESH")) {
       refreshCameras();
     }
   }
-  private synchronized void refreshCameras() {
+  private void refreshCameras() {
     IO.println("Camera Refresh Called, Current Camera: " + getCurrentCamera());
     if (yellow.getLocation() == getCurrentCamera()) {
       if (yellow.isCupcakeActive()) {
@@ -615,6 +618,7 @@ public class OSCN extends Application{
       yellowThreat.setHeight(0);
     }
     if (yellow.isCupcakeActive()) {
+      IO.println("Cupcake on Camera " + (yellow.getCupcakeLocation() + 1) + ", looking at Camera " + (getCurrentCamera() + 1));
       if (yellow.getCupcakeLocation() == getCurrentCamera()) {
         cupcake.setCenterX(Math.floor(Math.random() * 601) + 500);
         cupcake.setCenterY(Math.floor(Math.random() * 301) + 300);
@@ -630,10 +634,10 @@ public class OSCN extends Application{
       cupcake.setRadius(0);
     }
   }
-  private void getDeathDetails(ThreatEvent event) {
+  private String getDeathDetails(ThreatEvent event) {
     Event.fireEvent(OSCN.stage, new NightEvent(NightEvent.NIGHT_END));
-
     event.consume();
+    return "";
   }
 
 }

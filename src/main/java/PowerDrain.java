@@ -8,7 +8,8 @@ import javafx.event.EventType;
 
  public class PowerDrain implements Runnable{
    private long waitPeriod;
-   private volatile boolean terminateSwitch = false;
+   protected volatile boolean terminateSwitch = false;
+   protected volatile Thread workerThread;
 
    public PowerDrain() {
      this(50);
@@ -17,26 +18,27 @@ import javafx.event.EventType;
      this.waitPeriod = waitPeriod;
    }
 
-   public terminate() {
+   public void terminate() {
      terminateSwitch = true;
-     this.interrupt();
-     this.notify();
+
+     if (workerThread != null) {
+       workerThread.interrupt();
+     }
+
      IO.println("Terminated Process: Power Drain");
    }
 
    public void run() {
-     synchronized (this) {
-       while (OSCN.getPower() > 0 && !terminateSwitch) {
-         try {
-           this.wait(waitPeriod);
-         } catch (InterruptedException e) {
-         }
+     workerThread = Thread.currentThread();
 
-         if (terminateSwitch) return; else {
-           OSCN.changePower();
-           OSCN.updatePower();
-         }
-       }
+     while (OSCN.getPower() > 0 && !terminateSwitch) {
+       try {
+         Thread.sleep(waitPeriod);
+       } catch (InterruptedException e) { if (terminateSwitch) return; }
+
+       if (terminateSwitch) return;
+       OSCN.changePower();
+       OSCN.updatePower();
      }
    }
  }
