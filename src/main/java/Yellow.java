@@ -4,6 +4,7 @@
  * @author YoloMoloCuber
  */
 
+import javafx.application.*;
 import java.util.*;
 import javafx.event.*;
 import javafx.scene.input.*;
@@ -66,8 +67,11 @@ public class Yellow extends Threat{ // Code for Yellow/Chica
     if (e.getEventType().getName().equals("CUPCAKE_MOVE")) {
       if (cupcakeLocation == location) { // sees if it was prompted to move when the cupcake was already at the same camera
         IO.println("dude why'd you take away my cupcake");
-        Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.YELLOW_DEATH));
-        return;
+        Platform.runLater(() -> {
+          Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.YELLOW_DEATH));
+          terminateSwitch = true;
+          return;
+        });
       }
       moveCupcake();
       Event.fireEvent(OSCN.getStage(), new NightEvent(NightEvent.NIGHT_CAMERAS_REFRESH));
@@ -118,7 +122,9 @@ public class Yellow extends Threat{ // Code for Yellow/Chica
 
       if (cupcakeLocation != location) {
         IO.println("too slow");
+
         Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.YELLOW_DEATH));
+        terminateSwitch = true;
         return;
       } else {
         try {
@@ -130,10 +136,10 @@ public class Yellow extends Threat{ // Code for Yellow/Chica
 
       if (terminateSwitch) return;
 
+      Event.fireEvent(OSCN.stage, new ThreatEvent(ThreatEvent.CUPCAKE_LEAVE));
       location = 0;
       cupcakeActive = false;
       IO.println("cupcakeActive -> false");
-      Event.fireEvent(OSCN.stage, new ThreatEvent(ThreatEvent.CUPCAKE_LEAVE));
     }
   }
 }

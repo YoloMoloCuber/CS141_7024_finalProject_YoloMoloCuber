@@ -32,6 +32,7 @@ public class OSCN extends Application{
   static public Group menu = new Group();
   static public Group office = new Group();
   static public Group cameras = new Group();
+  private Scene loadScene;
   static public final Color DEFAULT_COLOR = Color.BLACK;
   static public final double DEFAULT_WIDTH = 1.0;
 
@@ -114,6 +115,11 @@ public class OSCN extends Application{
 
       // sets listeners for events
       stage.addEventFilter(ThreatEvent.CUPCAKE_ANY, yellow::cupcakeCheck);
+
+      VBox loadingRoot = new VBox();
+      Label loadingLabel = new Label("Returning to Menu...");
+      loadingRoot.getChildren().add(loadingLabel);
+      loadScene = new Scene(loadingRoot, 1600, 900);
 
       // Draws the icons for the threats. Placeholders for now
       Rectangle brownIcon = drawRect(50, 50, 100, 100, CUSTOM_BROWN, menu);
@@ -273,6 +279,9 @@ public class OSCN extends Application{
 
         // starts the Threads
         executor = Executors.newFixedThreadPool(totalTasks);
+
+        hour.reset();
+        generator.reset();
         executor.execute(hour);
         executor.execute(generator);
         for (Threat t : threats) {
@@ -554,26 +563,31 @@ public class OSCN extends Application{
   }
   private void returnToMenu(NightEvent event) {
     stopNight();
+    stage.setScene(loadScene);
 
     for (Threat t : threats) {
       t.terminate();
     }
     hour.terminate();
     generator.terminate();
+
     executor.shutdownNow();
 
-    Platform.runLater(() -> {
-      stage.setScene(menuScene);
-      stage.show();
+    Thread shutdownThread = new Thread(() -> {
+      try {
 
-      // Resets the threads for a new night
-      hour = new NightTimer();
-      generator = new PowerDrain();
-      brown = new Brown(brown.getDifficulty(), 0);
-      blue = new Blue(blue.getDifficulty(), 0);
-      yellow = new Yellow(yellow.getDifficulty(), 0);
-      red = new Red(red.getDifficulty(), 0);
+        boolean finished = executor.awaitTermination(10, TimeUnit.SECONDS);
+        IO.println("Executor shutdown complete: " + finished);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      }
+
+      Platform.runLater(() -> {stage.setScene(menuScene);});
     });
+
+    shutdownThread.setDaemon(true);
+    shutdownThread.start();
+
     event.consume();
   }
   private void cupcakeSpawnCue(ThreatEvent event) {

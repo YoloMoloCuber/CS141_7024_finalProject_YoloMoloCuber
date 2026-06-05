@@ -28,6 +28,10 @@ import javafx.event.EventType;
      IO.println("Terminated Process: Night Timer");
    }
 
+   public void reset() {
+     terminateSwitch = false;
+   }
+
    public void run() {
      workerThread = Thread.currentThread();
 
@@ -42,7 +46,7 @@ import javafx.event.EventType;
         OSCN.updateTime();
      }
 
-     if (OSCN.isNightActive()) {
+     if (OSCN.getTime() >= 6) {
        Event.fireEvent(OSCN.stage, new NightEvent(NightEvent.NIGHT_END));
      }
    }

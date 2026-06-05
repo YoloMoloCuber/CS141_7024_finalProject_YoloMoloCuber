@@ -18,6 +18,10 @@ import javafx.event.EventType;
      this.waitPeriod = waitPeriod;
    }
 
+   public void reset() {
+     terminateSwitch = false;
+   }
+
    public void terminate() {
      terminateSwitch = true;
 
