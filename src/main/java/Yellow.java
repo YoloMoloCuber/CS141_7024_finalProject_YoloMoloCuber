@@ -122,9 +122,9 @@ public class Yellow extends Threat{ // Code for Yellow/Chica
 
       if (cupcakeLocation != location) {
         IO.println("too slow");
-
-        Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.YELLOW_DEATH));
         terminateSwitch = true;
+        Platform.runLater(() -> {Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.YELLOW_DEATH});
+
         return;
       } else {
         try {
