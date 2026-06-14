@@ -356,6 +356,11 @@ public class OSCN extends Application{
         IO.println("Camera 10 clicked");
       });
       */
+
+      // Threat interactions
+      cupcake.setOnMouseClicked(e -> {
+        Event.fireEvent(cupcake, new ThreatEvent(ThreatEvent.CUPCAKE_MOVE));
+      });
   }
 
   // rendering shapes
@@ -472,7 +477,7 @@ public class OSCN extends Application{
 
   // time-related methods
   static public void updateTime() {
-    currentTime.setText(printTime());
+    currentTime.setText(printTime());100
   }
   static private String printTime() { // This is so that I wouldn't have to type it repeatedly.
     if (nightHour < 0) {
@@ -548,7 +553,6 @@ public class OSCN extends Application{
   // methods to start and stop the night
   public void startNight() { // sets activeNight to true
     activeNight = true;
-
   }
   public void stopNight() { // sets activeNight to false
     activeNight = false;

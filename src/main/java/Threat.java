@@ -57,7 +57,7 @@ public abstract class Threat implements Runnable{
     return difficulty;
   }
   public int getLocation() {
-    IO.println("Getter sees : Camera" + (location + 1));
+    IO.println("Getter sees : Camera " + (location + 1));
     return location;
   }
   public String getThreatName() { // Returns the description text.

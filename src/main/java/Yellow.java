@@ -26,9 +26,7 @@ public class Yellow extends Threat{ // Code for Yellow/Chica
   public void terminate() {
     terminateSwitch = true;
 
-    if (workerThread != null) {
-      workerThread.interrupt();
-    }
+    workerThread.interrupt();
 
     IO.println("Terminated Process: Yellow");
     reset();
@@ -97,13 +95,16 @@ public class Yellow extends Threat{ // Code for Yellow/Chica
       if (!dxMode) {
         do {
           try {
-            Thread.sleep(movementTimer);
+            for (int i = 0; i < movementTimer / 10; i++) {
+              Thread.sleep(10);
+              if (terminateSwitch) {IO.println("stopped"); return;}
+            }
           } catch (InterruptedException e) {
-            if (terminateSwitch) return;
+            if (terminateSwitch) {IO.println("stopped"); return;}
           }
         } while (!movementCheck());
       }
-      if (terminateSwitch) return;
+      if (terminateSwitch) {IO.println("stopped"); return;}
 
       location = nextLocation;
       cupcakeActive = true;
@@ -113,12 +114,16 @@ public class Yellow extends Threat{ // Code for Yellow/Chica
       Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.CUPCAKE_SPAWN));
 
       try {
-        Thread.sleep(20000);
+        long tempTime = 30000 - (difficulty * 500);
+        for (int i = 0; i < tempTime / 10; i++) {
+          Thread.sleep(10);
+          if (terminateSwitch) {IO.println("stopped"); return;}
+        }
       } catch (InterruptedException e) {
-        if (terminateSwitch) return;
+        if (terminateSwitch) {IO.println("stopped"); return;}
       }
 
-      if (terminateSwitch) return;
+      if (terminateSwitch) {IO.println("stopped"); return;}
 
       if (cupcakeLocation != location) {
         IO.println("too slow");
@@ -130,11 +135,11 @@ public class Yellow extends Threat{ // Code for Yellow/Chica
         try {
           Thread.sleep(3500);
         } catch (InterruptedException e) {
-          if (terminateSwitch) return;
+          if (terminateSwitch) {IO.println("stopped"); return;}
         }
       }
 
-      if (terminateSwitch) return;
+      if (terminateSwitch) {IO.println("stopped"); return;}
 
       Event.fireEvent(OSCN.stage, new ThreatEvent(ThreatEvent.CUPCAKE_LEAVE));
       location = 0;
