@@ -55,6 +55,8 @@ public class OSCN extends Application{
   MediaPlayer cupcakeSpawnSound = createSFX("src/assets/audio/chickenCall.wav");
   MediaPlayer cupcakeLeaveSound = createSFX("src/assets/audio/chickenCall.wav");
   static MediaPlayer doorSlam = createSFX("src/assets/audio/doorSlam.wav");
+  static MediaPlayer stepsAdvance = createSFX("src/assets/audio/red_advance.wav");
+  static MediaPlayer stepsRetreat = createSFX("src/assets/audio/red_retreat.wav");
 
   // Generates the renderings of the threats that should be shown on the cameras
   static Circle cupcake = drawCircle(-5, -5, 0, CUSTOM_CUPCAKE, cameras);
@@ -122,6 +124,7 @@ public class OSCN extends Application{
       stage.addEventFilter(ThreatEvent.CUPCAKE_SPAWN, this::cupcakeSpawnCue);
       stage.addEventFilter(ThreatEvent.CUPCAKE_LEAVE, this::cupcakeLeaveCue);
       stage.addEventFilter(ThreatEvent.DEATH, this::getDeathDetails);
+      stage.addEventFilter(ThreatEvent.RED_MOVEMENT, this::redMoveCue);
 
       // sets listeners for events
       stage.addEventFilter(ThreatEvent.CUPCAKE_ANY, yellow::cupcakeCheck);
@@ -657,6 +660,18 @@ public class OSCN extends Application{
     refreshCameras();
 
     event.consume();
+  }
+  private void redMoveCue(ThreatEvent e) {
+    refreshCameras();
+    if (e.getEventType().getName().equals("RED_ADVANCE")) {
+      stepsAdvance.stop();
+      stepsAdvance.play();
+    }
+    if (e.getEventType().getName().equals("RED_RETREAT")) {
+      stepsRetreat.stop();
+      stepsRetreat.play();
+    }
+    e.consume();
   }
 
   // Refreshes the screen when something happens.
