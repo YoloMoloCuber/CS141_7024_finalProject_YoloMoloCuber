@@ -41,6 +41,8 @@ import javafx.event.EventType;
        } catch (InterruptedException e) { if (terminateSwitch) return; }
 
        if (terminateSwitch) return;
+       if (OSCN.leftIsClosed()) { OSCN.changePower(); }
+       if (OSCN.rightIsClosed()) { OSCN.changePower(); }
        OSCN.changePower();
        OSCN.updatePower();
      }

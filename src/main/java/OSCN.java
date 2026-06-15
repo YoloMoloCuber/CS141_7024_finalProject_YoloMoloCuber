@@ -54,10 +54,20 @@ public class OSCN extends Application{
   // Creates the sound effects
   MediaPlayer cupcakeSpawnSound = createSFX("src/assets/audio/chickenCall.wav");
   MediaPlayer cupcakeLeaveSound = createSFX("src/assets/audio/chickenCall.wav");
+  static MediaPlayer doorSlam = createSFX("src/assets/audio/doorSlam.wav");
 
   // Generates the renderings of the threats that should be shown on the cameras
   static Circle cupcake = drawCircle(-5, -5, 0, CUSTOM_CUPCAKE, cameras);
   Rectangle yellowThreat = drawRect(-5, -5, 0, 0, CUSTOM_YELLOW, cameras);
+  Rectangle redThreat = drawRect(-5, -5, 0, 0, CUSTOM_RED, cameras);
+
+  // Renders the doors in the office plus the two buttons next to the doors, also declares door-related variables.
+  static Rectangle leftDoor = drawRect(0, 100, 300, 700, Color.BLACK, office);
+  static Rectangle rightDoor = drawRect(1300, 100, 300, 700, Color.BLACK, office);
+  static Button leftButton = drawButton("", 350, 425, 50, 50, 0, office);
+  static Button rightButton = drawButton("", 1200, 425, 50, 50, 0, office);
+  static private boolean leftClosed = false;
+  static private boolean rightClosed = false;
 
   // Text that shows the AI values of the threats. (Part 1)
   Text aiValue = text(getAIValues(), 1300, 350, menu); // I had to move this out here for some reason or it wouldn't work.
@@ -303,6 +313,12 @@ public class OSCN extends Application{
       cameraDown.setOnMouseClicked(e -> {
         stage.setScene(officeScene);
       });
+      leftButton.setOnMouseClicked(e -> {
+        toggleLeftDoor();
+      });
+      rightButton.setOnMouseClicked(e -> {
+        toggleRightDoor();
+      });
 
       /* Camera Button controls, or, at least, the old way I made these.
       camOneButton.setOnMouseClicked(e -> {
@@ -477,7 +493,7 @@ public class OSCN extends Application{
 
   // time-related methods
   static public void updateTime() {
-    currentTime.setText(printTime());100
+    currentTime.setText(printTime());
   }
   static private String printTime() { // This is so that I wouldn't have to type it repeatedly.
     if (nightHour < 0) {
@@ -519,6 +535,38 @@ public class OSCN extends Application{
   }
   static public void setPower(int num) { // sets power to a certain percentage. 100 corresponds to 1% power.
     power = num;
+  }
+
+  // door related methods
+  static public void toggleLeftDoor() {
+    leftClosed = !leftClosed;
+    doorSlam.stop();
+    doorSlam.play();
+    refreshOffice();
+  }
+  static public void toggleRightDoor() {
+    rightClosed = !rightClosed;
+    doorSlam.stop();
+    doorSlam.play();
+    refreshOffice();
+  }
+  static public void setLeftDoor(boolean state) {
+    leftClosed = !state;
+    doorSlam.stop();
+    doorSlam.play();
+    refreshOffice();
+  }
+  static public void setRightDoor(boolean state) {
+    rightClosed = !state;
+    doorSlam.stop();
+    doorSlam.play();
+    refreshOffice();
+  }
+  static public boolean leftIsClosed() {
+    return leftClosed;
+  }
+  static public boolean rightIsClosed() {
+    return rightClosed;
   }
 
   // camera-related methods
@@ -610,6 +658,12 @@ public class OSCN extends Application{
 
     event.consume();
   }
+
+  // Refreshes the screen when something happens.
+  static private void refreshOffice() {
+    leftDoor.setFill(leftClosed ? Color.GRAY : Color.BLACK);
+    rightDoor.setFill(rightClosed ? Color.GRAY : Color.BLACK);
+  }
   private void refreshCameras(NightEvent event) {
     if (event.getEventType().getName().equals("NIGHT_CAMERAS_REFRESH")) {
       refreshCameras();
@@ -650,6 +704,17 @@ public class OSCN extends Application{
       cupcake.setCenterX(-5);
       cupcake.setCenterY(-5);
       cupcake.setRadius(0);
+    }
+    if (red.getLocation() == getCurrentCamera()) {
+      redThreat.setX(1450);
+      redThreat.setY(400);
+      redThreat.setWidth(300);
+      redThreat.setHeight(400);
+    } else {
+      redThreat.setX(-5);
+      redThreat.setY(-5);
+      redThreat.setWidth(0);
+      redThreat.setHeight(0);
     }
   }
   private String getDeathDetails(ThreatEvent event) {
