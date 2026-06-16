@@ -1,6 +1,7 @@
 /*
  * Custom class that I made to make code more consise & so I don't have to write the same line over and over again.
  * Only purpose of this was to make it store an index for the camera it's associated with.
+ * I made this and the KeypadButton class seperate so I could more easily distinguish between keypad buttons and camera buttons.
  *
  *  @author YoloMoloCuber
  */

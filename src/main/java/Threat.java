@@ -57,7 +57,6 @@ public abstract class Threat implements Runnable{
     return difficulty;
   }
   public int getLocation() {
-    IO.println("Getter sees : Camera " + (location + 1));
     return location;
   }
   public String getThreatName() { // Returns the description text.
@@ -140,6 +139,8 @@ public abstract class Threat implements Runnable{
     if (difficulty <= 0) return false;
 
     boolean output = ((int)(Math.ceil(Math.random() * (maxNum))) + failCount <= difficulty);
+
+    IO.println(getThreatName() + " attempted movement. Suceeded? " + Boolean.toString(output) + " Fails in a row: " failCount);
 
     if (output) failCount = 0; else failCount++;
 

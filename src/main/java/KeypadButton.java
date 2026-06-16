@@ -26,7 +26,8 @@ public class KeypadButton extends Button {
     index = i;
 
     setOnMouseClicked(e -> {
-      OSCN.setCamera(this.index);
+      OSCN.keypadButtonPressed(index);
+      IO.println("Keypad Button " + index + " clicked");
     });
   }
   public KeypadButton(String text, Node graphic) {

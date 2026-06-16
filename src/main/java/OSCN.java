@@ -57,9 +57,12 @@ public class OSCN extends Application{
   static MediaPlayer doorSlam = createSFX("src/assets/audio/doorSlam.wav");
   static MediaPlayer stepsAdvance = createSFX("src/assets/audio/red_advance.wav");
   static MediaPlayer stepsRetreat = createSFX("src/assets/audio/red_retreat.wav");
+  static MediaPlayer beepSound = createSFX("src/assets/audio/blue_beep.wav");
 
   // Generates the renderings of the threats that should be shown on the cameras
   static Circle cupcake = drawCircle(-5, -5, 0, CUSTOM_CUPCAKE, cameras);
+  Rectangle blueThreat = drawRect(-5, -5, 0, 0, CUSTOM_BLUE, cameras);
+  Text blueSequence = text("", 900, 275, cameras);
   Rectangle yellowThreat = drawRect(-5, -5, 0, 0, CUSTOM_YELLOW, cameras);
   Rectangle redThreat = drawRect(-5, -5, 0, 0, CUSTOM_RED, cameras);
 
@@ -102,10 +105,30 @@ public class OSCN extends Application{
     "West Hallway", // Camera # 9
     "East Hallway" // Camera # 10
   };
+  static Text cameraName = text(CAMERA_NAMES[currentCamera], 20, 120, cameras);
 
   // Stage and menuScene on the outside so that I can access it in outside methods
   static public Stage stage;
   private Scene menuScene;
+
+  // keypad-related variables
+  static private int buttonCall = -1;
+
+  static public int getButtonPressed() {
+    return buttonCall;
+  }
+
+  // Keypad Buttons
+  KeypadButton padZerButton = drawPadButton("0", 780, 530, 40, 40, 15, office, 0);
+  KeypadButton padOneButton = drawPadButton("1", 730, 480, 40, 40, 15, office, 1);
+  KeypadButton padTwoButton = drawPadButton("2", 780, 480, 40, 40, 15, office, 2);
+  KeypadButton padThrButton = drawPadButton("3", 830, 480, 40, 40, 15, office, 3);
+  KeypadButton padFouButton = drawPadButton("4", 730, 430, 40, 40, 15, office, 4);
+  KeypadButton padFivButton = drawPadButton("5", 780, 430, 40, 40, 15, office, 5);
+  KeypadButton padSixButton = drawPadButton("6", 830, 430, 40, 40, 15, office, 6);
+  KeypadButton padSevButton = drawPadButton("7", 730, 380, 40, 40, 15, office, 7);
+  KeypadButton padEigButton = drawPadButton("8", 780, 380, 40, 40, 15, office, 8);
+  KeypadButton padNinButton = drawPadButton("9", 830, 380, 40, 40, 15, office, 9);
 
   // Creates the threads beforehand
   NightTimer hour = new NightTimer();
@@ -125,9 +148,12 @@ public class OSCN extends Application{
       stage.addEventFilter(ThreatEvent.CUPCAKE_LEAVE, this::cupcakeLeaveCue);
       stage.addEventFilter(ThreatEvent.DEATH, this::getDeathDetails);
       stage.addEventFilter(ThreatEvent.RED_MOVEMENT, this::redMoveCue);
+      stage.addEventFilter(ThreatEvent.BLUE_ACTIVE, this::blueAction);
+      stage.addEventFilter(ThreatEvent.BLUE_PACIFIED, this::blueAction);
 
       // sets listeners for events
       stage.addEventFilter(ThreatEvent.CUPCAKE_ANY, yellow::cupcakeCheck);
+      stage.addEventFilter(NightEvent.KEYPAD_PRESSED, blue::checkNumber);
 
       VBox loadingRoot = new VBox();
       Label loadingLabel = new Label("Returning to Menu...");
@@ -151,6 +177,9 @@ public class OSCN extends Application{
       aiValue.setFont(Font.font("Courier New", FontWeight.NORMAL, 20));
       currentTime.setFont(Font.font("Courier New", FontWeight.NORMAL, 50));
       remainingPower.setFont(Font.font("Courier New", FontWeight.NORMAL, 30));
+      cameraName.setFont(Font.font("Courier New", FontWeight.NORMAL, 40));
+      blueSequence.setFont(Font.font("Courier New", FontWeight.NORMAL, 20));
+      blueSequence.setFill(CUSTOM_BLUE);
 
       // Buttons that adjust the AI values of different threats.
       Button increm = drawButton("+", 1300, 100, 125, 50, 30, menu);
@@ -448,6 +477,24 @@ public class OSCN extends Application{
       button.setFont(Font.font(t));
       return button;
   }
+  static public KeypadButton drawPadButton(String str, int x, int y, int w, int h, int t, Group group, int i) {
+      // parameters: Button text, x position, y position, width, height, font size, group to include in, index
+      if (w < 0 || h < 0 || t < 0) {
+        throw new IllegalArgumentException("Dimensions and font size cannot be negative!");
+      }
+
+      KeypadButton button = new KeypadButton(str, i);
+      button.setMinWidth(w);
+      button.setMinHeight(h);
+      button.setPrefWidth(w);
+      button.setPrefHeight(h);
+      button.setMaxWidth(w);
+      button.setMaxHeight(h);
+      button.relocate(x, y);
+      group.getChildren().add(button);
+      button.setFont(Font.font(t));
+      return button;
+  }
 
   public void setIndex(int index) {
       selectedIndex = index;
@@ -673,8 +720,20 @@ public class OSCN extends Application{
     }
     e.consume();
   }
+  private void blueAction(ThreatEvent e) {
+    refreshCameras();
+    if (e.getEventType().getName().equals("BLUE_ACTIVE")) {
+      beepSound.stop();
+      beepSound.play();
+    }
+    e.consume();
+  }
 
   // Refreshes the screen when something happens.
+  static public void keypadButtonPressed(int i) {
+    buttonCall = i;
+    Event.fireEvent(OSCN.stage, new NightEvent(NightEvent.KEYPAD_PRESSED));
+  }
   static private void refreshOffice() {
     leftDoor.setFill(leftClosed ? Color.GRAY : Color.BLACK);
     rightDoor.setFill(rightClosed ? Color.GRAY : Color.BLACK);
@@ -686,6 +745,28 @@ public class OSCN extends Application{
   }
   private void refreshCameras() {
     IO.println("Camera Refresh Called, Current Camera: " + getCurrentCamera());
+    cameraName.setText(getCurrentCameraName());
+    if (blue.getLocation() == getCurrentCamera()) {
+      blueThreat.setX(900);
+      blueThreat.setY(300);
+      blueThreat.setWidth(180);
+      blueThreat.setHeight(240);
+      if (blue.isActive()) {
+        if (blue.dxIsActive()) {
+          blueSequence.setText("" + blue.getCurrentNumber());
+        } else {
+          blueSequence.setText(blue.getSequence());
+        }
+      } else {
+        blueSequence.setText("... Inactive");
+      }
+    } else {
+      blueThreat.setX(-5);
+      blueThreat.setY(-5);
+      blueThreat.setWidth(0);
+      yellowThreat.setHeight(0);
+      blueSequence.setText("");
+    }
     if (yellow.getLocation() == getCurrentCamera()) {
       if (yellow.isCupcakeActive()) {
         yellowThreat.setX(100);
