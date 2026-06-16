@@ -16,6 +16,7 @@ life of me, understand how the hell to fix these errors with Threads...
 Anyways, with that out of the way...
 
 ## Requirements
+
 - Maven is required to run this, as it's needed to run JavaFX for the game to be
 functional.
 - You will also need to have a terminal of sorts. The only OS I've tested this
@@ -27,3 +28,15 @@ seeing as you're reading this right now.
 - I would also recommend a keyboard. No, seriously, it makes *all* the
 difference when you wanna play a game. How would you even make it here without
 one?
+
+
+### Additional notes
+
+I cannot, for the LIFE of me, figure out why sometimes a sound cue does not play
+properly when it should. Just know that you will have to keep an eye out, and
+do NOT rely on sound cues here. No, seriously, you will likely die from a sneak
+attack if you do.
+
+As I mentioned, this was a final project for a class that I am/was taking, and
+thus, is relatively... *horrible*. It also doesn't help that I slightly
+procrastinated on this...
