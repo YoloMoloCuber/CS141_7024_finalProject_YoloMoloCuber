@@ -12,9 +12,10 @@ import javafx.scene.input.*;
 public class Red extends Threat{ // Code for Red/Foxy
   private int stareCounter = 0;
   private int ignoreCounter = 0;
+  private boolean kill = false;
 
   public Red(int d, int l) {
-      super(d, l, 3, "Red", "Placeholder for Red", "DX Placeholder for Red", 4500);
+      super(d, l, 3, "Red", "Red will start at the north room of the loop.\n\nHe runs to either the east or west room of the loop with a sound cue.\nWhen he does this, make sure to stare at him.\nThe longer you ignore him, the longer he will take to go away.\nIf he is ignored in this stage, he moves to the south room of the loop, then to either hallway.\n\nOnce at either hallway, close the door on him or he kills you.\nHe stays at the door based on how long you leave him there with the door open.", "He can now just skip to either hallway as he pleases.\nHe can kill you if you miss any of his movements,\nnot just if you forget to close the door on him.", 4500);
   }
   public Red() {
       this(0, 0);
@@ -39,6 +40,7 @@ public class Red extends Threat{ // Code for Red/Foxy
   private void resetCounters() {
     stareCounter = 0;
     ignoreCounter = 0;
+    kill = false;
   }
 
   @Override
@@ -91,7 +93,7 @@ public class Red extends Threat{ // Code for Red/Foxy
           Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.RED_ADVANCE));
           break;
         case 2: // in east section of loop, moves back if stared at, otherwise advances to south section of loop
-          while (stareCounter < 500 && ignoreCounter < 1000) {
+          while (stareCounter < (200 + (ignoreCounter / 2)) && ignoreCounter < 1000) {
             try {
               Thread.sleep(10);
             } catch (InterruptedException e) {
@@ -104,17 +106,23 @@ public class Red extends Threat{ // Code for Red/Foxy
               ignoreCounter++;
             }
           }
-          if (stareCounter >= 500) {
+          if (ignoreCounter < 1000) {
             location = 0;
             Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.RED_RETREAT));
           } else  {
-            location = 4;
-            Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.RED_ADVANCE));
+            if (!dxMode) {
+              location = 4;
+              Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.RED_ADVANCE));
+            } else {
+              terminate();
+              Platform.runLater(() -> {Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.RED_DEATH));});
+              return;
+            }
           }
           resetCounters();
           break;
         case 6: // in west section of loop, moves back if stared at, otherwise advances to south section of loop
-          while (stareCounter < 500 && ignoreCounter < 1000) {
+          while (stareCounter < (200 + (ignoreCounter / 2)) && ignoreCounter < 1000) {
             try {
               Thread.sleep(10);
             } catch (InterruptedException e) {
@@ -122,24 +130,29 @@ public class Red extends Threat{ // Code for Red/Foxy
             }
             if (terminateSwitch) {IO.println("stopped"); return;}
             if (OSCN.getCurrentCamera() == location) {
-              IO.println("Red is being stared at");
               stareCounter++;
             } else {
-              IO.println("Red is being ignored");
               ignoreCounter++;
             }
           }
-          if (stareCounter >= 500) {
+          if (ignoreCounter < 1000) {
             location = 0;
             Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.RED_RETREAT));
           } else  {
-            location = 4;
-            Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.RED_ADVANCE));
+            if (!dxMode) {
+              location = 4;
+              Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.RED_ADVANCE));
+            } else {
+              terminate();
+              Platform.runLater(() -> {Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.RED_DEATH));});
+              return;
+            }
           }
           resetCounters();
           break;
         case 8: // in west hallway, moves back if left door is closed, otherwise kills
-          for (int i = 0; i < 1000; i++) {
+
+          while (stareCounter < (300 + (ignoreCounter)) && ignoreCounter < 1000) {
             try {
               Thread.sleep(10);
             } catch (InterruptedException e) {
@@ -147,19 +160,24 @@ public class Red extends Threat{ // Code for Red/Foxy
             }
 
             if (OSCN.leftIsClosed()) {
-              location = 0;
-              Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.RED_RETREAT));
-              break;
+              stareCounter++;
+            } else {
+              ignoreCounter++;
             }
+            if (ignoreCounter >= 1000) { kill = true; }
           }
-          if (location != 0) {
+          if (kill) {
             terminate();
             Platform.runLater(() -> {Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.RED_DEATH));});
             return;
+          } else {
+            location = 0;
+            resetCounters();
+            Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.RED_RETREAT));
           }
           break;
         case 9: // in east hallway, moves back if right door is closed, otherwise kills
-          for (int i = 0; i < 1000; i++) {
+          while (stareCounter < (300 + (ignoreCounter)) && ignoreCounter < 1000) {
             try {
               Thread.sleep(10);
             } catch (InterruptedException e) {
@@ -167,18 +185,22 @@ public class Red extends Threat{ // Code for Red/Foxy
             }
 
             if (OSCN.rightIsClosed()) {
-              location = 0;
-              Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.RED_RETREAT));
-              break;
+              stareCounter++;
+            } else {
+              ignoreCounter++;
             }
+            if (ignoreCounter >= 1000) { kill = true; }
           }
-          if (location != 0) {
+          if (kill) {
             terminate();
             Platform.runLater(() -> {Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.RED_DEATH));});
             return;
+          } else {
+            location = 0;
+            resetCounters();
+            Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.RED_RETREAT));
           }
           break;
-        // write code for when you fail to close the door on Red here, I am too fucking tired for ts
       }
     }
   }
