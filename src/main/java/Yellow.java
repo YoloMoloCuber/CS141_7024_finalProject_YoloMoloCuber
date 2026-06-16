@@ -44,7 +44,7 @@ public class Yellow extends Threat{ // Code for Yellow/Chica
     } else {
       cupcakeLocation = 0;
     }
-    IO.println("Cupcake location: " + cupcakeLocation);
+    //IO.println("Cupcake location: " + cupcakeLocation);
   }
 
   @Override
@@ -53,11 +53,11 @@ public class Yellow extends Threat{ // Code for Yellow/Chica
     nextLocation = 0;
     cupcakeLocation = 0;
     cupcakeActive = false;
-    IO.println("cupcakeActive -> false");
+    //IO.println("cupcakeActive -> false");
   }
 
   public boolean isCupcakeActive() {
-    IO.println("Getter sees: " + cupcakeActive);
+    //IO.println("Getter sees: " + cupcakeActive);
     return cupcakeActive;
   }
   public void setCupcakeState(boolean bool) {
@@ -67,7 +67,7 @@ public class Yellow extends Threat{ // Code for Yellow/Chica
   public void cupcakeCheck(ThreatEvent e) {
     if (e.getEventType().getName().equals("CUPCAKE_MOVE")) {
       if (cupcakeLocation == location) { // sees if it was prompted to move when the cupcake was already at the same camera
-        IO.println("dude why'd you take away my cupcake");
+        //IO.println("dude why'd you take away my cupcake");
         Platform.runLater(() -> {
           Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.YELLOW_DEATH));
           terminateSwitch = true;
@@ -87,8 +87,8 @@ public class Yellow extends Threat{ // Code for Yellow/Chica
   public void run() {
     workerThread = Thread.currentThread();
     cupcakeActive = false;
-    IO.println("cupcakeActive -> false");
-    IO.println(workerThread.toString());
+    //IO.println("cupcakeActive -> false");
+    //IO.println(workerThread.toString());
 
     while (!terminateSwitch) {
       workerThread = Thread.currentThread();
@@ -96,27 +96,27 @@ public class Yellow extends Threat{ // Code for Yellow/Chica
       do { // sets the location of the cupcake to a location that isn't their current location
         cupcakeLocation = (int)(Math.floor(Math.random() * 8));
         nextLocation = (int)(Math.floor(Math.random() * 8));
-        IO.println("Next Location: Camera " + (nextLocation + 1) + "\n Next Cupcake: Camera " + (cupcakeLocation + 1));
+        //IO.println("Next Location: Camera " + (nextLocation + 1) + "\n Next Cupcake: Camera " + (cupcakeLocation + 1));
       } while (cupcakeLocation == nextLocation);
       if (!dxMode) {
         do {
           try {
             for (int i = 0; i < movementTimer / 10; i++) {
               Thread.sleep(10);
-              if (terminateSwitch) {IO.println("stopped"); return;}
+              if (terminateSwitch) {return;}
             }
           } catch (InterruptedException e) {
-            if (terminateSwitch) {IO.println("stopped"); return;}
+            if (terminateSwitch) {return;}
           }
-        } while (!movementCheck());
+        } while (!movementCheck(40));
       }
-      if (terminateSwitch) {IO.println("stopped"); return;}
+      if (terminateSwitch) {return;}
       if (difficulty > 0) {
         location = nextLocation;
         cupcakeActive = true;
-        IO.println("cupcakeActive -> true");
+        /*IO.println("cupcakeActive -> true");
         IO.println("Yellow's new location: " + location);
-        IO.println("Cupcake location: " + cupcakeLocation);
+        IO.println("Cupcake location: " + cupcakeLocation);*/
         Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.CUPCAKE_SPAWN));
 
         try {
@@ -128,16 +128,16 @@ public class Yellow extends Threat{ // Code for Yellow/Chica
           }
           for (int i = 0; i < tempTime / 10; i++) {
             Thread.sleep(10);
-            if (terminateSwitch) {IO.println("stopped"); return;}
+            if (terminateSwitch) {return;}
           }
         } catch (InterruptedException e) {
-          if (terminateSwitch) {IO.println("stopped"); return;}
+          if (terminateSwitch) {return;}
         }
 
-        if (terminateSwitch) {IO.println("stopped"); return;}
+        if (terminateSwitch) {return;}
 
         if (cupcakeLocation != location) {
-          IO.println("too slow");
+          //IO.println("too slow");
           terminateSwitch = true;
           Platform.runLater(() -> {Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.YELLOW_DEATH));});
 
@@ -146,20 +146,28 @@ public class Yellow extends Threat{ // Code for Yellow/Chica
           try {
             for (int i = 0; i < 350; i++) {
               Thread.sleep(10);
-              if (terminateSwitch) {IO.println("stopped"); return;}
+              if (terminateSwitch) {return;}
             }
           } catch (InterruptedException e) {
-            if (terminateSwitch) {IO.println("stopped"); return;}
+            if (terminateSwitch) {return;}
           }
         }
 
-        if (terminateSwitch) {IO.println("stopped"); return;}
+        if (terminateSwitch) {return;}
 
         location = 0;
         cupcakeActive = false;
         Event.fireEvent(OSCN.stage, new ThreatEvent(ThreatEvent.CUPCAKE_LEAVE));
-        IO.println("cupcakeActive -> false");
+        //IO.println("cupcakeActive -> false");
       }
     }
   }
 }
+/*
+ * Copyright 2026 Axel Liman
+ *
+ * This file is part of Oversimplified Custom Night (OSCN).
+ * OSCN is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * OSCN is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with OSCN. If not, see <https://www.gnu.org/licenses/>.
+ */
