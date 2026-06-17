@@ -58,9 +58,24 @@ public class OSCN extends Application{
   static MediaPlayer stepsAdvance = createSFX("src/assets/audio/red_advance.wav");
   static MediaPlayer stepsRetreat = createSFX("src/assets/audio/red_retreat.wav");
   static MediaPlayer beepSound = createSFX("src/assets/audio/blue_beep.wav");
+  static MediaPlayer brownStalking = createSFX("src/assets/audio/brown_mumble.wav");
+  static MediaPlayer honkSound = createSFX("src/assets/audio/honk.wav");
+
+  // Keypad Buttons
+  KeypadButton padZerButton = drawPadButton("0", 780, 530, 40, 40, 15, office, 0);
+  KeypadButton padOneButton = drawPadButton("1", 730, 480, 40, 40, 15, office, 1);
+  KeypadButton padTwoButton = drawPadButton("2", 780, 480, 40, 40, 15, office, 2);
+  KeypadButton padThrButton = drawPadButton("3", 830, 480, 40, 40, 15, office, 3);
+  KeypadButton padFouButton = drawPadButton("4", 730, 430, 40, 40, 15, office, 4);
+  KeypadButton padFivButton = drawPadButton("5", 780, 430, 40, 40, 15, office, 5);
+  KeypadButton padSixButton = drawPadButton("6", 830, 430, 40, 40, 15, office, 6);
+  KeypadButton padSevButton = drawPadButton("7", 730, 380, 40, 40, 15, office, 7);
+  KeypadButton padEigButton = drawPadButton("8", 780, 380, 40, 40, 15, office, 8);
+  KeypadButton padNinButton = drawPadButton("9", 830, 380, 40, 40, 15, office, 9);
 
   // Generates the renderings of the threats that should be shown on the cameras
   static Circle cupcake = drawCircle(-5, -5, 0, CUSTOM_CUPCAKE, cameras);
+  Rectangle brownThreat = drawRect(-5, -5, 0, 0, CUSTOM_BROWN, office);
   Rectangle blueThreat = drawRect(-5, -5, 0, 0, CUSTOM_BLUE, cameras);
   Text blueSequence = text("", 900, 275, cameras);
   Rectangle yellowThreat = drawRect(-5, -5, 0, 0, CUSTOM_YELLOW, cameras);
@@ -73,6 +88,9 @@ public class OSCN extends Application{
   static Button rightButton = drawButton("", 1200, 425, 50, 50, 0, office);
   static private boolean leftClosed = false;
   static private boolean rightClosed = false;
+
+  // Checks if the cameras are up or down.
+  static private boolean camerasUp = false;
 
   // Text that shows the AI values of the threats. (Part 1)
   Text aiValue = text(getAIValues(), 1300, 350, menu); // I had to move this out here for some reason or it wouldn't work.
@@ -118,18 +136,6 @@ public class OSCN extends Application{
     return buttonCall;
   }
 
-  // Keypad Buttons
-  KeypadButton padZerButton = drawPadButton("0", 780, 530, 40, 40, 15, office, 0);
-  KeypadButton padOneButton = drawPadButton("1", 730, 480, 40, 40, 15, office, 1);
-  KeypadButton padTwoButton = drawPadButton("2", 780, 480, 40, 40, 15, office, 2);
-  KeypadButton padThrButton = drawPadButton("3", 830, 480, 40, 40, 15, office, 3);
-  KeypadButton padFouButton = drawPadButton("4", 730, 430, 40, 40, 15, office, 4);
-  KeypadButton padFivButton = drawPadButton("5", 780, 430, 40, 40, 15, office, 5);
-  KeypadButton padSixButton = drawPadButton("6", 830, 430, 40, 40, 15, office, 6);
-  KeypadButton padSevButton = drawPadButton("7", 730, 380, 40, 40, 15, office, 7);
-  KeypadButton padEigButton = drawPadButton("8", 780, 380, 40, 40, 15, office, 8);
-  KeypadButton padNinButton = drawPadButton("9", 830, 380, 40, 40, 15, office, 9);
-
   // Creates the threads beforehand
   NightTimer hour = new NightTimer();
   PowerDrain generator = new PowerDrain();
@@ -150,10 +156,15 @@ public class OSCN extends Application{
       stage.addEventFilter(ThreatEvent.RED_MOVEMENT, this::redMoveCue);
       stage.addEventFilter(ThreatEvent.BLUE_ACTIVE, this::blueAction);
       stage.addEventFilter(ThreatEvent.BLUE_PACIFIED, this::blueAction);
+      stage.addEventFilter(ThreatEvent.BROWN_ACTIVE, this::brownActive);
+      stage.addEventFilter(ThreatEvent.BROWN_HONK, this::brownLeave);
+      stage.addEventFilter(ThreatEvent.BROWN_HONK, brown::brownClicked);
 
       // sets listeners for events
       stage.addEventFilter(ThreatEvent.CUPCAKE_ANY, yellow::cupcakeCheck);
       stage.addEventFilter(NightEvent.KEYPAD_PRESSED, blue::checkNumber);
+      //stage.addEventFilter(NightEvent.CAMERAS_UP, brown::cameraWentDown);
+      //stage.addEventFilter(NightEvent.CAMERAS_DOWN, brown::cameraWentUp);
 
       VBox loadingRoot = new VBox();
       Label loadingLabel = new Label("Returning to Menu...");
@@ -276,6 +287,11 @@ public class OSCN extends Application{
         updateAIValues();
       });
 
+      // Deals with Brown when clicked
+      brownThreat.setOnMouseClicked(e -> {
+        Event.fireEvent(stage, new ThreatEvent(ThreatEvent.BROWN_HONK));
+      });
+
       // Code for the buttons to alter the AI values of the threats from the main menu
       increm.setOnMouseClicked(e -> {
         if (selectedIndex != -1) {
@@ -341,9 +357,11 @@ public class OSCN extends Application{
       cameraUp.setOnMouseClicked(e -> {
         stage.setScene(cameraScene);
         refreshCameras();
+        setCameraStatus(true);
       });
       cameraDown.setOnMouseClicked(e -> {
         stage.setScene(officeScene);
+        setCameraStatus(false);
       });
       leftButton.setOnMouseClicked(e -> {
         toggleLeftDoor();
@@ -351,59 +369,6 @@ public class OSCN extends Application{
       rightButton.setOnMouseClicked(e -> {
         toggleRightDoor();
       });
-
-      /* Camera Button controls, or, at least, the old way I made these.
-      camOneButton.setOnMouseClicked(e -> {
-        setCamera(camOneButton.getIndex());
-        IO.println("Camera 1 clicked");
-        refreshCameras();
-      });
-      camTwoButton.setOnMouseClicked(e -> {
-        setCamera(camTwoButton.getIndex());
-        IO.println("Camera 2 clicked");
-        refreshCameras();
-      });
-      camThrButton.setOnMouseClicked(e -> {
-        setCamera(camThrButton.getIndex());
-        refreshCameras();
-        IO.println("Camera 3 clicked");
-      });
-      camFouButton.setOnMouseClicked(e -> {
-        setCamera(camFouButton.getIndex());
-        refreshCameras();
-        IO.println("Camera 4 clicked");
-      });
-      camFivButton.setOnMouseClicked(e -> {
-        setCamera(camFivButton.getIndex());
-        refreshCameras();
-        IO.println("Camera 5 clicked");
-      });
-      camSixButton.setOnMouseClicked(e -> {
-        setCamera(camSixButton.getIndex());
-        refreshCameras();
-        IO.println("Camera 6 clicked");
-      });
-      camSevButton.setOnMouseClicked(e -> {
-        setCamera(camSevButton.getIndex());
-        refreshCameras();
-        IO.println("Camera 7 clicked");
-      });
-      camEigButton.setOnMouseClicked(e -> {
-        setCamera(camEigButton.getIndex());
-        refreshCameras();
-        IO.println("Camera 8 clicked");
-      });
-      camNinButton.setOnMouseClicked(e -> {
-        setCamera(camNinButton.getIndex());
-        refreshCameras();
-        IO.println("Camera 9 clicked");
-      });
-      camTenButton.setOnMouseClicked(e -> {
-        setCamera(camTenButton.getIndex());
-        refreshCameras();
-        IO.println("Camera 10 clicked");
-      });
-      */
 
       // Threat interactions
       cupcake.setOnMouseClicked(e -> {
@@ -647,6 +612,12 @@ public class OSCN extends Application{
       setCamera(9);
     }
   }
+  static public boolean getCameraStatus() {
+    return camerasUp;
+  }
+  static public void setCameraStatus(boolean b) {
+    camerasUp = b;
+  }
 
   // methods to start and stop the night
   public void startNight() { // sets activeNight to true
@@ -672,6 +643,12 @@ public class OSCN extends Application{
     }
     hour.terminate();
     generator.terminate();
+
+    brownThreat.setX(-5);
+    brownThreat.setY(-5);
+    brownThreat.setWidth(0);
+    brownThreat.setHeight(0);
+    brownStalking.stop();
 
     executor.shutdownNow();
 
@@ -706,6 +683,25 @@ public class OSCN extends Application{
     cupcakeLeaveSound.play();
     refreshCameras();
 
+    event.consume();
+  }
+  private void brownActive(ThreatEvent event) {
+    brownStalking.stop();
+    brownStalking.play();
+    brownThreat.setX((int)(Math.floor(Math.random() * 1101) + 100));
+    brownThreat.setY(300);
+    brownThreat.setWidth(300);
+    brownThreat.setHeight(600);
+    event.consume();
+  }
+  private void brownLeave(ThreatEvent event) {
+    brownStalking.stop();
+    honkSound.stop();
+    honkSound.play();
+    brownThreat.setX(-5);
+    brownThreat.setY(-5);
+    brownThreat.setWidth(0);
+    brownThreat.setHeight(0);
     event.consume();
   }
   private void redMoveCue(ThreatEvent e) {

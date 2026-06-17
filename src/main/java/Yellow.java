@@ -25,7 +25,6 @@ public class Yellow extends Threat{ // Code for Yellow/Chica
   @Override
   public void terminate() {
     terminateSwitch = true;
-    IO.println(workerThread.toString());
 
     try {
       workerThread.interrupt();

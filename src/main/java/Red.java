@@ -93,34 +93,6 @@ public class Red extends Threat{ // Code for Red/Foxy
           Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.RED_ADVANCE));
           break;
         case 2: // in east section of loop, moves back if stared at, otherwise advances to south section of loop
-          while (stareCounter < (200 + (ignoreCounter / 2)) && ignoreCounter < 1000) {
-            try {
-              Thread.sleep(10);
-            } catch (InterruptedException e) {
-              if (terminateSwitch) {IO.println("stopped"); return;}
-            }
-            if (terminateSwitch) {IO.println("stopped"); return;}
-            if (OSCN.getCurrentCamera() == location) {
-              stareCounter++;
-            } else {
-              ignoreCounter++;
-            }
-          }
-          if (ignoreCounter < 1000) {
-            location = 0;
-            Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.RED_RETREAT));
-          } else  {
-            if (!dxMode) {
-              location = 4;
-              Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.RED_ADVANCE));
-            } else {
-              terminate();
-              Platform.runLater(() -> {Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.RED_DEATH));});
-              return;
-            }
-          }
-          resetCounters();
-          break;
         case 6: // in west section of loop, moves back if stared at, otherwise advances to south section of loop
           while (stareCounter < (200 + (ignoreCounter / 2)) && ignoreCounter < 1000) {
             try {
@@ -151,7 +123,6 @@ public class Red extends Threat{ // Code for Red/Foxy
           resetCounters();
           break;
         case 8: // in west hallway, moves back if left door is closed, otherwise kills
-
           while (stareCounter < (300 + (ignoreCounter)) && ignoreCounter < 1000) {
             try {
               Thread.sleep(10);

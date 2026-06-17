@@ -17,6 +17,9 @@ public class ThreatEvent extends Event {
   public static final EventType<ThreatEvent> CUPCAKE_MOVE = new EventType<>(ThreatEvent.CUPCAKE_ANY, "CUPCAKE_MOVE");
   public static final EventType<ThreatEvent> CUPCAKE_LEAVE = new EventType<>(ThreatEvent.CUPCAKE_ANY, "CUPCAKE_LEAVE");
   public static final EventType<ThreatEvent> DEATH = new EventType<>(ThreatEvent.ANY, "DEATH");
+  public static final EventType<ThreatEvent> BROWN_DEATH = new EventType<>(ThreatEvent.DEATH, "BROWN_DEATH");
+  public static final EventType<ThreatEvent> BROWN_ACTIVE = new EventType<>(ThreatEvent.ANY, "BROWN_ACTIVE");
+  public static final EventType<ThreatEvent> BROWN_HONK = new EventType<>(ThreatEvent.ANY, "BROWN_HONK");
   public static final EventType<ThreatEvent> BLUE_DEATH = new EventType<>(ThreatEvent.DEATH, "BLUE_DEATH");
   public static final EventType<ThreatEvent> YELLOW_DEATH = new EventType<>(ThreatEvent.DEATH, "YELLOW_DEATH");
   public static final EventType<ThreatEvent> BLUE_ACTIVE = new EventType<>(ThreatEvent.ANY, "BLUE_ACTIVE");

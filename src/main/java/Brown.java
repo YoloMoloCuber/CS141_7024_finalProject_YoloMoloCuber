@@ -1,10 +1,92 @@
+/**
+ * The class for the Brown threat.
+ *
+ * @author YoloMoloCuber
+ */
+
+import javafx.application.*;
+import java.util.*;
+import javafx.event.*;
+import javafx.scene.input.*;
+
 public class Brown extends Threat{ // Code for Brown/Freddy
+  private int waitTimer = 0;
+  private boolean attackQueued = false;
+  //private boolean canAttack = false;
 
   public Brown(int d, int l) {
-      super(d, l, 0, "Brown", "Placeholder for Brown", "DX Placeholder for Brown", 4700);
+      super(d, l, 0, "Brown", "Brown will randomly appear in your office.\nWhen he does, you must react quickly and click on him.\nNo, seriously you better have a fast reaction time.", "DX Placeholder for Brown", 4700);
   }
   public Brown() {
       this(0, 0);
+  }
+
+  public void brownClicked(ThreatEvent e) {
+    if (e.getEventType().getName().equals("BROWN_HONK")) {
+      attackQueued = false;
+    }
+  }
+
+  @Override
+  public void terminate() {
+    terminateSwitch = true;
+
+    try {
+      workerThread.interrupt();
+    } catch (NullPointerException e) {}
+
+    IO.println("Terminated Process: Brown");
+    reset();
+  }
+
+  @Override
+  public void reset() {
+    super.reset();
+    waitTimer = 0;
+    attackQueued = false;
+    //canAttack = false;
+  }
+
+  @Override
+  public void run() {
+    workerThread = Thread.currentThread();
+
+    while (!terminateSwitch) {
+      if (!attackQueued) do {
+        try {
+          for (int i = 0; i < movementTimer / 10; i++) {
+            Thread.sleep(10);
+            if (terminateSwitch) {IO.println("stopped"); return;}
+          }
+        } catch (InterruptedException e) {
+          if (terminateSwitch) {IO.println("stopped"); return;}
+        }
+      } while (!movementCheck());
+
+      attackQueued = true;
+      IO.println("Brown queued to move");
+
+      if (attackQueued && !OSCN.getCameraStatus()) {
+        Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.BROWN_ACTIVE));
+        waitTimer = 0;
+        while ((waitTimer < (300 - (difficulty * 10))) && attackQueued) {
+          try {
+            Thread.sleep(10);
+          } catch (InterruptedException e) {
+            if (terminateSwitch) {IO.println("stopped"); return;}
+          }
+          if (terminateSwitch) {IO.println("stopped"); return;}
+
+          waitTimer++;
+        }
+
+        if (attackQueued) {
+          terminate();
+          Platform.runLater(() -> {Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.BROWN_DEATH));});
+          return;
+        }
+      }
+    }
   }
 }
 /*
