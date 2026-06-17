@@ -159,6 +159,7 @@ public class OSCN extends Application{
       stage.addEventFilter(ThreatEvent.BROWN_ACTIVE, this::brownActive);
       stage.addEventFilter(ThreatEvent.BROWN_HONK, this::brownLeave);
       stage.addEventFilter(ThreatEvent.BROWN_HONK, brown::brownClicked);
+      stage.addEventFilter(ThreatEvent.BROWN_CONTINUE, brown::brownClicked);
 
       // sets listeners for events
       stage.addEventFilter(ThreatEvent.CUPCAKE_ANY, yellow::cupcakeCheck);
@@ -289,7 +290,11 @@ public class OSCN extends Application{
 
       // Deals with Brown when clicked
       brownThreat.setOnMouseClicked(e -> {
-        Event.fireEvent(stage, new ThreatEvent(ThreatEvent.BROWN_HONK));
+        if (brown.dxIsActive()) {
+          Event.fireEvent(stage, new ThreatEvent(ThreatEvent.BROWN_CONTINUE));
+        } else {
+          Event.fireEvent(stage, new ThreatEvent(ThreatEvent.BROWN_HONK));
+        }
       });
 
       // Code for the buttons to alter the AI values of the threats from the main menu

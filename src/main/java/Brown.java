@@ -12,10 +12,11 @@ import javafx.scene.input.*;
 public class Brown extends Threat{ // Code for Brown/Freddy
   private int waitTimer = 0;
   private boolean attackQueued = false;
+  private int counter = 0;
   //private boolean canAttack = false;
 
   public Brown(int d, int l) {
-      super(d, l, 0, "Brown", "Brown will randomly appear in your office.\nWhen he does, you must react quickly and click on him.\nNo, seriously you better have a fast reaction time.", "DX Placeholder for Brown", 4700);
+      super(d, l, 0, "Brown", "Brown will randomly appear in your office.\nWhen he does, you must react quickly and click on him.\nNo, seriously you better have a fast reaction time.", "He can appear while you have your cameras up\nand he now takes multiple clicks to expel.", 4700);
   }
   public Brown() {
       this(0, 0);
@@ -24,6 +25,14 @@ public class Brown extends Threat{ // Code for Brown/Freddy
   public void brownClicked(ThreatEvent e) {
     if (e.getEventType().getName().equals("BROWN_HONK")) {
       attackQueued = false;
+    } else if (e.getEventType().getName().equals("BROWN_CONTINUE")) {
+      waitTimer = 0;
+      counter += (int)(Math.floor(Math.random() * 3) + 1);
+      if (counter >= 5 || !dxMode) {
+        Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.BROWN_HONK));
+      } else {
+        Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.BROWN_ACTIVE));
+      }
     }
   }
 
@@ -44,6 +53,7 @@ public class Brown extends Threat{ // Code for Brown/Freddy
     super.reset();
     waitTimer = 0;
     attackQueued = false;
+    counter = 0;
     //canAttack = false;
   }
 
@@ -61,15 +71,18 @@ public class Brown extends Threat{ // Code for Brown/Freddy
         } catch (InterruptedException e) {
           if (terminateSwitch) {IO.println("stopped"); return;}
         }
-      } while (!movementCheck());
+      } while (!movementCheck(30));
 
       attackQueued = true;
       IO.println("Brown queued to move");
 
-      if (attackQueued && !OSCN.getCameraStatus()) {
+      if (attackQueued && (!OSCN.getCameraStatus() || dxMode)) {
         Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.BROWN_ACTIVE));
         waitTimer = 0;
-        while ((waitTimer < (300 - (difficulty * 10))) && attackQueued) {
+        counter = 0;
+        int killTimer = 300 - (difficulty * 10);
+        if (dxMode) killTimer += 100;
+        while ((waitTimer < killTimer) && attackQueued) {
           try {
             Thread.sleep(10);
           } catch (InterruptedException e) {
