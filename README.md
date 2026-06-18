@@ -56,3 +56,5 @@ project, and resolving what felt like millions of errors I've been getting.
 Also, special thanks to Java Code Junkie on YouTube for teaching me how to set
 up custom events! Their github repository that I looked at can be found here at:
 https://github.com/JavaCodeJunkie/javafx
+
+Github repository: https://github.com/YoloMoloCuber/CS141_7024_finalProject_YoloMoloCuber
