@@ -10,6 +10,8 @@ different coding language like C++.
 :exclamation: WARNING: THIS GAME CONTAINS POTENTIALLY LOUD NOISES AND NO
 JUMPSCARES! YOU HAVE BEEN WARNED! :exclamation:
 
+Oh, and this game is also heavily unbalanced. It is likely to be very unfair.
+
 Also, this program is... like... 99% going to crash on you. I cannot, for the
 life of me, understand how the hell to fix these errors with Threads...
 
