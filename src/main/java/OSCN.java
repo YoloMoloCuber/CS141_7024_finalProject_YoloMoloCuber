@@ -1,10 +1,6 @@
 /**
  * TO DO:
- * - Make an office
- * - Make the cameras work and be functional
- * - make the actual playable game???
- *
- * this code is a damn mess...
+ * - add instructions for gameplay
  *
  * @author YoloMoloCuber
  */
@@ -35,6 +31,8 @@ public class OSCN extends Application{
   private Scene loadScene;
   static public final Color DEFAULT_COLOR = Color.BLACK;
   static public final double DEFAULT_WIDTH = 1.0;
+  static private boolean powerActive = true;
+  static private boolean isCharging = false;
 
   // Creates the custom colors used for the threats.
   static public final Color CUSTOM_BROWN = Color.web("6e4d10");
@@ -73,13 +71,16 @@ public class OSCN extends Application{
   KeypadButton padEigButton = drawPadButton("8", 780, 380, 40, 40, 15, office, 8);
   KeypadButton padNinButton = drawPadButton("9", 830, 380, 40, 40, 15, office, 9);
 
-  // Generates the renderings of the threats that should be shown on the cameras
+  // Generates the renderings of the threats that should be shown on the cameras/in the office
   static Circle cupcake = drawCircle(-5, -5, 0, CUSTOM_CUPCAKE, cameras);
   Rectangle brownThreat = drawRect(-5, -5, 0, 0, CUSTOM_BROWN, office);
   Rectangle blueThreat = drawRect(-5, -5, 0, 0, CUSTOM_BLUE, cameras);
   Text blueSequence = text("", 900, 275, cameras);
   Rectangle yellowThreat = drawRect(-5, -5, 0, 0, CUSTOM_YELLOW, cameras);
   Rectangle redThreat = drawRect(-5, -5, 0, 0, CUSTOM_RED, cameras);
+
+  // button :D
+  static Button refillGenerator = drawButton("Recharge Power", 1415, 500, 160, 80, 20, cameras);
 
   // Renders the doors in the office plus the two buttons next to the doors, also declares door-related variables.
   static Rectangle leftDoor = drawRect(0, 100, 300, 700, Color.BLACK, office);
@@ -109,6 +110,9 @@ public class OSCN extends Application{
   // The time to show
   static Text remainingPower = text("POWER", 20, 880, cameras);
 
+  // death cause
+  Text deathTip = text("", 20, 800, menu);
+
   // The camera that is actively being looked at & the camera names
   static private int currentCamera = 0; // refers to the index of the camera
   static private final String[] CAMERA_NAMES = {
@@ -128,6 +132,8 @@ public class OSCN extends Application{
   // Stage and menuScene on the outside so that I can access it in outside methods
   static public Stage stage;
   private Scene menuScene;
+  private Scene officeScene;
+  private Scene cameraScene;
 
   // keypad-related variables
   static private int buttonCall = -1;
@@ -148,6 +154,8 @@ public class OSCN extends Application{
   public void start(Stage primaryStage) throws FileNotFoundException {
       // sets the stage to primaryStage.
       this.stage = primaryStage;
+
+      // sets listeners for events
       stage.addEventFilter(NightEvent.NIGHT_END, this::returnToMenu);
       stage.addEventFilter(NightEvent.NIGHT_CAMERAS, this::refreshCameras);
       stage.addEventFilter(ThreatEvent.CUPCAKE_SPAWN, this::cupcakeSpawnCue);
@@ -160,10 +168,9 @@ public class OSCN extends Application{
       stage.addEventFilter(ThreatEvent.BROWN_HONK, this::brownLeave);
       stage.addEventFilter(ThreatEvent.BROWN_HONK, brown::brownClicked);
       stage.addEventFilter(ThreatEvent.BROWN_CONTINUE, brown::brownClicked);
-
-      // sets listeners for events
       stage.addEventFilter(ThreatEvent.CUPCAKE_ANY, yellow::cupcakeCheck);
       stage.addEventFilter(NightEvent.KEYPAD_PRESSED, blue::checkNumber);
+      stage.addEventFilter(NightEvent.POWER_OUTAGE, this::disableTools);
       //stage.addEventFilter(NightEvent.CAMERAS_UP, brown::cameraWentDown);
       //stage.addEventFilter(NightEvent.CAMERAS_DOWN, brown::cameraWentUp);
 
@@ -229,8 +236,8 @@ public class OSCN extends Application{
       // Loads the screen
       stage.setTitle("Oversimplified Custom Night");
       menuScene = new Scene(menu, 1600, 900);
-      Scene officeScene = new Scene(office, 1600, 900);
-      Scene cameraScene = new Scene(cameras, 1600, 900);
+      officeScene = new Scene(office, 1600, 900);
+      cameraScene = new Scene(cameras, 1600, 900);
       menuScene.setFill(Color.ALICEBLUE);
       stage.setScene(menuScene);
       stage.show();
@@ -334,6 +341,12 @@ public class OSCN extends Application{
         }
         updateAIValues();
       });
+      refillGenerator.setOnMousePressed(e -> {
+        isCharging = true;
+      });
+      refillGenerator.setOnMouseReleased(e -> {
+        isCharging = false;
+      });
 
       // Code for leaving the main menu
       startNight.setOnMouseClicked(e -> {
@@ -360,19 +373,21 @@ public class OSCN extends Application{
 
       // Office controls
       cameraUp.setOnMouseClicked(e -> {
-        stage.setScene(cameraScene);
-        refreshCameras();
-        setCameraStatus(true);
+        if (powerActive) {
+          stage.setScene(cameraScene);
+          refreshCameras();
+          setCameraStatus(true);
+        }
       });
       cameraDown.setOnMouseClicked(e -> {
         stage.setScene(officeScene);
         setCameraStatus(false);
       });
       leftButton.setOnMouseClicked(e -> {
-        toggleLeftDoor();
+        if (powerActive) toggleLeftDoor();
       });
       rightButton.setOnMouseClicked(e -> {
-        toggleRightDoor();
+        if (powerActive) toggleRightDoor();
       });
 
       // Threat interactions
@@ -552,9 +567,18 @@ public class OSCN extends Application{
   }
   static public void changePower(int num) { // changes power by an inputted amount. Positive numbers increase power, negative numbers decrease it.
     power += num;
+    if (power > 10000) {
+      power = 10000;
+    }
+    if (power < 0) {
+      power = 0;
+    }
   }
   static public void setPower(int num) { // sets power to a certain percentage. 100 corresponds to 1% power.
     power = num;
+  }
+  static public boolean powerIsCharging() {
+    return isCharging;
   }
 
   // door related methods
@@ -571,13 +595,13 @@ public class OSCN extends Application{
     refreshOffice();
   }
   static public void setLeftDoor(boolean state) {
-    leftClosed = !state;
+    leftClosed = state;
     doorSlam.stop();
     doorSlam.play();
     refreshOffice();
   }
   static public void setRightDoor(boolean state) {
-    rightClosed = !state;
+    rightClosed = state;
     doorSlam.stop();
     doorSlam.play();
     refreshOffice();
@@ -627,6 +651,7 @@ public class OSCN extends Application{
   // methods to start and stop the night
   public void startNight() { // sets activeNight to true
     activeNight = true;
+    powerActive = true;
   }
   public void stopNight() { // sets activeNight to false
     activeNight = false;
@@ -729,6 +754,15 @@ public class OSCN extends Application{
     }
     e.consume();
   }
+  private void disableTools(NightEvent e) {
+    powerActive = false;
+    setLeftDoor(false);
+    setRightDoor(false);
+    stage.setScene(officeScene);
+    refreshOffice();
+
+    e.consume();
+  }
 
   // Refreshes the screen when something happens.
   static public void keypadButtonPressed(int i) {
@@ -747,6 +781,11 @@ public class OSCN extends Application{
   private void refreshCameras() {
     IO.println("Camera Refresh Called, Current Camera: " + getCurrentCamera());
     cameraName.setText(getCurrentCameraName());
+    if (getCurrentCamera() == 7) {
+      refillGenerator.resizeRelocate(1415, 500, 160, 80);
+    } else {
+      refillGenerator.resizeRelocate(-5000, -5000, 0, 0);
+    }
     if (blue.getLocation() == getCurrentCamera()) {
       blueThreat.setX(900);
       blueThreat.setY(300);
@@ -814,10 +853,35 @@ public class OSCN extends Application{
       redThreat.setHeight(0);
     }
   }
-  private String getDeathDetails(ThreatEvent event) {
+  private void getDeathDetails(ThreatEvent e) {
+    String eventName = e.getEventType().getName();
+    String deathCause = "";
+    switch (eventName) {
+      case "BROWN_DEATH":
+        deathCause = "You died to Brown.\nYou were a tad too slow for Brown! Act faster!";
+        break;
+      case "BLUE_MISPRESS_DEATH":
+        deathCause = "You died to Blue.\nOoh, well, you could've done it, if only you pressed the other button\nthat was just a bit in the other direction...";
+        break;
+      case "BLUE_PATIENCE_DEATH":
+        deathCause = "You died to Blue.\nI think Blue broke down waiting for you. Maybe try putting in the\nreboot code faster?";
+        break;
+      case "YELLOW_CUPCAKE_DEATH":
+        deathCause = "You died to Yellow.\nYellow doesn't like it when you take her things away from her.";
+        break;
+      case "YELLOW_PATIENCE_DEATH":
+        deathCause = "You died to Yellow.\nYellow would appreciate it if you could get her things to her faster.";
+        break;
+      case "RED_DEATH":
+        deathCause = "You died to Red.\nI know, right? Red runs fast. Like, really fast. He's really camera shy, though.\nAt least, until he gets near you.";
+        break;
+      default:
+        deathCause = "You died to... something?\nCouldn't get the cause of death. What the heck did you die to?";
+        break;
+    }
     Event.fireEvent(OSCN.stage, new NightEvent(NightEvent.NIGHT_END));
-    event.consume();
-    return "";
+    deathTip.setText(deathCause);
+    e.consume();
   }
 
   private void addEscapeHandler(Scene scene, Stage stage) {

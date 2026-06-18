@@ -17,6 +17,7 @@ public class NightEvent extends Event {
   public static final EventType<NightEvent> CAMERAS_UP = new EventType<>(NightEvent.NIGHT_CAMERAS, "CAMERAS_UP");
   public static final EventType<NightEvent> CAMERAS_DOWN = new EventType<>(NightEvent.NIGHT_CAMERAS, "CAMERAS_DOWN");
   public static final EventType<NightEvent> KEYPAD_PRESSED = new EventType<>(NightEvent.ANY, "KEYPAD_PRESSED");
+  public static final EventType<NightEvent> POWER_OUTAGE = new EventType<>(NightEvent.ANY, "POWER_OUTAGE");
 
   public NightEvent(EventType<? extends Event> eventType) {
     super(eventType);

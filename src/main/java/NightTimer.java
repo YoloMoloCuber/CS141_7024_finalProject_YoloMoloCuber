@@ -24,6 +24,7 @@ import javafx.event.EventType;
      if (workerThread != null) {
        workerThread.interrupt();
      }
+     Thread.currentThread().interrupt();
 
      IO.println("Terminated Process: Night Timer");
    }

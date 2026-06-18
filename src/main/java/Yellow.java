@@ -29,6 +29,7 @@ public class Yellow extends Threat{ // Code for Yellow/Chica
     try {
       workerThread.interrupt();
     } catch (NullPointerException e) {}
+    Thread.currentThread().interrupt();
 
     IO.println("Terminated Process: Yellow");
     reset();

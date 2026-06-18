@@ -26,6 +26,7 @@ public class Red extends Threat{ // Code for Red/Foxy
     terminateSwitch = true;
 
     workerThread.interrupt();
+    Thread.currentThread().interrupt();
 
     IO.println("Terminated Process: Red");
     reset();

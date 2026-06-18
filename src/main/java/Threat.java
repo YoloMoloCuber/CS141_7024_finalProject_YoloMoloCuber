@@ -138,7 +138,7 @@ public abstract class Threat implements Runnable{
   protected boolean movementCheck(int maxNum) { // picks a random number from 1 to 20.
     if (difficulty <= 0) return false;
 
-    boolean output = ((int)(Math.ceil(Math.random() * (maxNum))) + failCount <= difficulty);
+    boolean output = ((int)(Math.ceil(Math.random() * (maxNum))) <= difficulty + failCount);
 
     IO.println(getThreatName() + " attempted movement. Suceeded? " + Boolean.toString(output) + " Fails in a row: " + failCount);
 

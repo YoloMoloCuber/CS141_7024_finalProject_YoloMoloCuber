@@ -21,7 +21,8 @@ public class ThreatEvent extends Event {
   public static final EventType<ThreatEvent> BROWN_ACTIVE = new EventType<>(ThreatEvent.ANY, "BROWN_ACTIVE");
   public static final EventType<ThreatEvent> BROWN_CONTINUE = new EventType<>(ThreatEvent.ANY, "BROWN_CONTINUE");
   public static final EventType<ThreatEvent> BROWN_HONK = new EventType<>(ThreatEvent.ANY, "BROWN_HONK");
-  public static final EventType<ThreatEvent> BLUE_DEATH = new EventType<>(ThreatEvent.DEATH, "BLUE_DEATH");
+  public static final EventType<ThreatEvent> BLUE_PATIENCE_DEATH = new EventType<>(ThreatEvent.DEATH, "BLUE_PATIENCE_DEATH");
+  public static final EventType<ThreatEvent> BLUE_MISPRESS_DEATH = new EventType<>(ThreatEvent.DEATH, "BLUE_MISPRESS_DEATH");
   public static final EventType<ThreatEvent> YELLOW_DEATH = new EventType<>(ThreatEvent.DEATH, "YELLOW_DEATH");
   public static final EventType<ThreatEvent> BLUE_ACTIVE = new EventType<>(ThreatEvent.ANY, "BLUE_ACTIVE");
   public static final EventType<ThreatEvent> BLUE_PACIFIED = new EventType<>(ThreatEvent.ANY, "BLUE_PACIFIED");

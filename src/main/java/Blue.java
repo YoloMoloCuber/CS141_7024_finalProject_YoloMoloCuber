@@ -65,6 +65,7 @@ public class Blue extends Threat { // Code for Blue/Bonnie
   public int getCurrentNumber() {
     if (currentIndex < 0 || currentIndex >= sequence.length) return -1; else return sequence[currentIndex];
   }
+
   public void checkNumber(NightEvent e) {
     IO.println("received number: " + OSCN.getButtonPressed());
 
@@ -77,9 +78,9 @@ public class Blue extends Threat { // Code for Blue/Bonnie
         waitTimer = 0;
         Event.fireEvent(OSCN.getStage(), new NightEvent(NightEvent.NIGHT_CAMERAS_REFRESH));
       }
-    } else if (dxMode && difficulty > 0) {
+    } else if (dxMode && difficulty > 0 && kill) {
       terminate();
-      Platform.runLater(() -> {Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.BLUE_DEATH));});
+      Platform.runLater(() -> {Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.BLUE_MISPRESS_DEATH));});
       return;
     }
   }
@@ -90,6 +91,7 @@ public class Blue extends Threat { // Code for Blue/Bonnie
     terminateSwitch = true;
 
     workerThread.interrupt();
+    Thread.currentThread().interrupt();
 
     IO.println("Terminated Process: Blue");
     reset();
@@ -162,7 +164,7 @@ public class Blue extends Threat { // Code for Blue/Bonnie
 
       if (kill) {
         terminate();
-        Platform.runLater(() -> {Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.BLUE_DEATH));});
+        Platform.runLater(() -> {Event.fireEvent(OSCN.getStage(), new ThreatEvent(ThreatEvent.BLUE_PATIENCE_DEATH));});
         return;
       }
     }

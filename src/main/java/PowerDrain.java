@@ -3,8 +3,10 @@
  *
  *  @author YoloMoloCuber
  */
-import javafx.event.Event;
-import javafx.event.EventType;
+ import javafx.application.*;
+ import java.util.*;
+ import javafx.event.*;
+ import javafx.scene.input.*;
 
  public class PowerDrain implements Runnable{
    private long waitPeriod;
@@ -28,6 +30,7 @@ import javafx.event.EventType;
      if (workerThread != null) {
        workerThread.interrupt();
      }
+     Thread.currentThread().interrupt();
 
      IO.println("Terminated Process: Power Drain");
    }
@@ -43,8 +46,13 @@ import javafx.event.EventType;
        if (terminateSwitch) return;
        if (OSCN.leftIsClosed()) { OSCN.changePower(); }
        if (OSCN.rightIsClosed()) { OSCN.changePower(); }
-       OSCN.changePower();
+       OSCN.changePower(OSCN.powerIsCharging() ? 2 : -2);
        OSCN.updatePower();
+
+       if (OSCN.getPower() <= 0) {
+         Platform.runLater(() -> {Event.fireEvent(OSCN.getStage(), new NightEvent(NightEvent.POWER_OUTAGE));});
+         terminate();
+       }
      }
    }
  }

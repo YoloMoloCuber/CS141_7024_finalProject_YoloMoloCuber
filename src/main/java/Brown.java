@@ -43,6 +43,7 @@ public class Brown extends Threat{ // Code for Brown/Freddy
     try {
       workerThread.interrupt();
     } catch (NullPointerException e) {}
+    Thread.currentThread().interrupt();
 
     IO.println("Terminated Process: Brown");
     reset();
@@ -71,7 +72,7 @@ public class Brown extends Threat{ // Code for Brown/Freddy
         } catch (InterruptedException e) {
           if (terminateSwitch) {IO.println("stopped"); return;}
         }
-      } while (!movementCheck(30));
+      } while (!movementCheck(35));
 
       attackQueued = true;
       IO.println("Brown queued to move");
