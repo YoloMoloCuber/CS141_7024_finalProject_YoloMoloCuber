@@ -29,6 +29,11 @@ seeing as you're reading this right now.
 difference when you wanna play a game. How would you even make it here without
 one?
 
+## Controls
+
+Esc key to exit the program.
+
+Everything else is controlled using the mouse cursor.
 
 ### Additional notes
 
@@ -40,3 +45,14 @@ attack if you do.
 As I mentioned, this was a final project for a class that I am/was taking, and
 thus, is relatively... *horrible*. It also doesn't help that I slightly
 procrastinated on this...
+
+I want 5 weeks of my life back.
+
+#### Credits
+I would like to thank what felt like nearly 100 different Stack Overflow pages,
+YouTube tutorials, and Oracle Java documentation pages for helping me make this
+project, and resolving what felt like millions of errors I've been getting.
+
+Also, special thanks to Java Code Junkie on YouTube for teaching me how to set
+up custom events! Their github repository that I looked at can be found here at:
+https://github.com/JavaCodeJunkie/javafx
