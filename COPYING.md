@@ -1,4 +1,10 @@
-Copyright 2026 Axel Liman
+GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007
+
+Copyright (C) 2026 Axel Liman
+
+Everyone is permitted to copy and distribute verbatim copies
+of this license document, but changing it is not allowed.
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
